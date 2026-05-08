@@ -51,6 +51,8 @@ const ScrambleText = ({ text, duration = 1200, className }) => {
 function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
   const [pairs, setPairs] = useState([]);
   const [selectedLeft, setSelectedLeft] = useState(null);
+  
+  const dotColors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#A142F4', '#00F0FF', '#FF007F'];
 
   const handleLeftClick = (item) => {
     if (isSubmitting) return;
@@ -60,9 +62,12 @@ function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
   const handleRightClick = (item) => {
     if (isSubmitting || !selectedLeft) return;
     
-    // Remove existing pair with this left or right
     const filtered = pairs.filter(p => p.left !== selectedLeft && p.right !== item);
-    setPairs([...filtered, { left: selectedLeft, right: item }]);
+    const usedColors = filtered.map(p => p.color);
+    const availableColors = dotColors.filter(c => !usedColors.includes(c));
+    const color = availableColors.length > 0 ? availableColors[0] : dotColors[Math.floor(Math.random() * dotColors.length)];
+
+    setPairs([...filtered, { left: selectedLeft, right: item, color }]);
     setSelectedLeft(null);
   };
 
@@ -71,60 +76,77 @@ function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
     const p = pairs.find(pair => pair[side] === item);
     return side === 'left' ? p?.right : p?.left;
   };
+  const getPairedColor = (side, item) => {
+    const p = pairs.find(pair => pair[side] === item);
+    return p ? p.color : undefined;
+  };
 
   const allPaired = pairs.length === data.left.length;
 
   return (
     <div className="w-full flex flex-col items-center gap-8">
-      <div className="w-full max-h-[50vh] md:max-h-[60vh] overflow-y-auto px-2 custom-scrollbar">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-5xl mx-auto">
-          {/* Left Column */}
-          <div className="flex flex-col gap-3">
-            <div className="font-mono text-[9px] text-white/20 tracking-[0.4em] uppercase mb-1 ml-4 text-center md:text-left">Terminal_A (Source)</div>
-            {data.left.map((item, i) => (
-              <motion.button
-                key={i}
-                whileHover={{ x: 5 }}
-                onClick={() => handleLeftClick(item)}
-                className={`relative p-4 md:p-5 text-left border-l-4 transition-all duration-300 clip-slant ${
-                  selectedLeft === item 
-                    ? 'bg-white/20 border-white shadow-[0_0_30px_rgba(255,255,255,0.3)] z-10' 
-                    : isPaired('left', item)
-                      ? 'bg-black/20 border-white/20 text-white/60'
-                      : 'bg-black/40 border-white/5 text-white/40 hover:text-white hover:border-white/20'
-                }`}
-                style={{ borderLeftColor: selectedLeft === item ? accentColor : isPaired('left', item) ? accentColor : undefined }}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="font-body text-xs md:text-sm font-bold tracking-wider uppercase truncate">{item}</span>
-                  {isPaired('left', item) && <CheckCircle2 size={14} className="text-white/40 shrink-0" />}
-                </div>
-              </motion.button>
-            ))}
-          </div>
+      <div className="w-full max-h-[50vh] md:max-h-[60vh] overflow-y-auto px-4 custom-scrollbar bg-black/30 p-6 rounded-3xl border border-white/10 shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 w-full max-w-5xl mx-auto relative">
+          
+          {/* Connector Line in the middle (visual only) */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[2px] bg-white/5 -translate-x-1/2"></div>
 
-          {/* Right Column */}
-          <div className="flex flex-col gap-3">
-            <div className="font-mono text-[9px] text-white/20 tracking-[0.4em] uppercase mb-1 ml-4 text-center md:text-right">Terminal_B (Destination)</div>
-            {data.right.map((item, i) => {
-              const pairedLeft = getPairedWith('right', item);
+          {/* Left Column */}
+          <div className="flex flex-col gap-4 relative z-10">
+            <div className="font-mono text-xs md:text-sm text-white/50 tracking-[0.4em] uppercase mb-2 text-center md:text-left border-b border-white/10 pb-2">Terminal_A (Source)</div>
+            {data.left.map((item, i) => {
+              const paired = isPaired('left', item);
+              const color = getPairedColor('left', item);
               return (
                 <motion.button
                   key={i}
-                  whileHover={{ x: -5 }}
-                  onClick={() => handleRightClick(item)}
-                  className={`relative p-4 md:p-5 text-right border-r-4 transition-all duration-300 clip-slant ${
-                    isPaired('right', item)
-                      ? 'bg-white/5 border-white text-white'
-                      : 'bg-black/40 border-white/5 text-white/40 hover:text-white hover:border-white/20'
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  onClick={() => handleLeftClick(item)}
+                  className={`relative p-5 md:p-6 text-left border-l-8 transition-all duration-300 clip-slant shadow-lg ${
+                    selectedLeft === item 
+                      ? 'bg-white/20 border-white shadow-[0_0_30px_rgba(255,255,255,0.3)] z-10' 
+                      : paired
+                        ? 'bg-black/60 border-white/20 text-white/80'
+                        : 'bg-gradient-to-r from-blue-900/40 to-black/40 border-blue-500/30 text-white/70 hover:text-white hover:border-blue-400'
                   }`}
-                  style={{ borderRightColor: isPaired('right', item) ? accentColor : undefined }}
+                  style={{ borderLeftColor: selectedLeft === item ? accentColor : paired ? color : undefined }}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-body text-sm md:text-lg font-bold tracking-wider uppercase truncate">{item}</span>
+                    {paired && <div className="w-4 h-4 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: color, color: color }} />}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Right Column */}
+          <div className="flex flex-col gap-4 relative z-10">
+            <div className="font-mono text-xs md:text-sm text-white/50 tracking-[0.4em] uppercase mb-2 text-center md:text-right border-b border-white/10 pb-2">Terminal_B (Destination)</div>
+            {data.right.map((item, i) => {
+              const pairedLeft = getPairedWith('right', item);
+              const paired = isPaired('right', item);
+              const color = getPairedColor('right', item);
+              return (
+                <motion.button
+                  key={i}
+                  whileHover={{ scale: 1.02, x: -5 }}
+                  onClick={() => handleRightClick(item)}
+                  className={`relative p-5 md:p-6 text-right border-r-8 transition-all duration-300 clip-slant shadow-lg ${
+                    paired
+                      ? 'bg-black/60 border-white text-white'
+                      : 'bg-gradient-to-l from-purple-900/40 to-black/40 border-purple-500/30 text-white/70 hover:text-white hover:border-purple-400'
+                  }`}
+                  style={{ borderRightColor: paired ? color : undefined }}
                 >
                   <div className="flex items-center justify-between flex-row-reverse gap-4">
-                    <span className="font-body text-xs md:text-sm font-bold tracking-wider uppercase text-right leading-tight">{item}</span>
+                    <span className="font-body text-sm md:text-lg font-bold tracking-wider uppercase text-right leading-tight break-words">{item}</span>
                     {pairedLeft && (
-                      <div className="font-mono text-[8px] uppercase tracking-tighter text-white/30 truncate max-w-[120px] bg-white/5 px-2 py-1 rounded">
-                        Linked: {pairedLeft}
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-4 h-4 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: color, color: color }} />
+                        <div className="font-mono text-[9px] uppercase tracking-tighter text-white/70 truncate max-w-[120px] bg-black/50 px-2 py-1 rounded border border-white/20">
+                          {pairedLeft}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -140,10 +162,10 @@ function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
         animate={{ opacity: allPaired ? 1 : 0.3, y: 0, scale: allPaired ? 1 : 0.98 }}
         disabled={!allPaired || isSubmitting}
         onClick={() => onComplete(pairs)}
-        className="group relative flex items-center gap-3 px-10 py-4 bg-white text-black font-display font-black tracking-[0.3em] uppercase clip-slant transition-all hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(0,0,0,0.5)] mt-2"
+        className="group relative flex items-center justify-center gap-4 px-12 py-5 bg-white text-black font-display font-black text-lg tracking-[0.3em] uppercase clip-slant transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-full max-w-md mx-auto"
         style={{ backgroundColor: allPaired ? accentColor : 'rgba(255,255,255,0.1)', color: allPaired ? 'black' : 'rgba(255,255,255,0.2)' }}
       >
-        <Send size={16} />
+        <Send size={24} />
         Initialize Uplink
       </motion.button>
     </div>
@@ -160,6 +182,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
   const [currentQIdx, setCurrentQIdx] = useState(firstUnanswered >= 0 ? firstUnanswered : 0);
   const [team, setTeam] = useState(initialTeam);
   const [session, setSession] = useState(initialSession);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [allAnswered, setAllAnswered] = useState(initialQuestions?.length > 0 && initialQuestions?.every(q => q.isAnswered));
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -245,9 +268,20 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
     const isTimeOver = timeLeft === 0 && session?.roundEndTime && (new Date(session.roundEndTime) <= new Date());
     
     if (!isActuallyActive || isTimeOver) {
+      // Always redirect to the team dashboard so they can see Historical Insights
       router.push(`/team/${teamId}`);
     }
-  }, [session?.status, timeLeft, router, teamId, session?.roundEndTime, session?.currentRound]);
+  }, [session?.status, timeLeft, router, teamId, session?.roundEndTime, session?.currentRound, allAnswered]);
+
+  useEffect(() => {
+    // Auto-redirect to team dashboard immediately upon securing Round 3
+    if (allAnswered && session?.currentRound === 3) {
+      const timer = setTimeout(() => {
+        router.push(`/team/${teamId}`);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [allAnswered, session?.currentRound, router, teamId]);
 
   useEffect(() => {
     clearInterval(timerRef.current);
@@ -284,13 +318,29 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
       if (data.team?.isDisqualified) setIsDisqualifiedLocal(true);
       
       setAllAnswered(data.questions?.length > 0 && data.questions?.every(q => q.isAnswered));
+
+      const lbRes = await fetch('/api/leaderboard');
+      if (lbRes.ok) {
+        const lbData = await lbRes.json();
+        setLeaderboard(lbData.leaderboard || []);
+      }
     } catch {}
   }
 
   async function fetchSessionOnly() {
-    const res = await fetch('/api/game/status');
-    const { session } = await res.json();
-    setSession(session);
+    try {
+      const [sessionRes, lbRes] = await Promise.all([
+        fetch('/api/game/status'),
+        fetch('/api/leaderboard')
+      ]);
+      const { session } = await sessionRes.json();
+      setSession(session);
+      
+      if (lbRes.ok) {
+        const { leaderboard } = await lbRes.json();
+        setLeaderboard(leaderboard || []);
+      }
+    } catch {}
   }
 
   const currentQ = questions[currentQIdx];
@@ -448,23 +498,23 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
         </div>
         <div className="flex items-center justify-between px-6 md:px-12 py-5">
            <div className="flex items-center gap-4">
-              <img src="/gdg-logo.png" alt="GDG" className="w-8 h-8 object-contain mr-4 hidden md:block" />
+              <img src="/gdg-logo.png" alt="GDG" className="w-10 h-10 object-contain mr-4 hidden md:block" />
 
               <div className="flex flex-col">
-                 <span className="font-mono text-[10px] text-white/50 tracking-[0.5em] uppercase">Active Operator</span>
-                 <span className="font-display font-black text-lg text-white uppercase">
+                 <span className="font-mono text-xs text-white/50 tracking-[0.5em] uppercase">Active Operator</span>
+                 <span className="font-display font-black text-2xl text-white uppercase">
                    {team?.players?.[(team?.currentPlayerIndex ?? 0)]?.name || 'OPERATOR'}
                  </span>
               </div>
            </div>
-           <div className={`hidden md:flex items-center gap-4 font-display font-black text-3xl tracking-[0.2em] ${isUrgent ? 'text-[#FF003C] animate-pulse' : 'text-white'}`}>
-              <Clock size={24} className="text-white/30" />
+           <div className={`hidden md:flex items-center gap-4 font-display font-black text-4xl tracking-[0.2em] ${isUrgent ? 'text-[#FF003C] animate-pulse' : 'text-white'}`}>
+              <Clock size={32} className="text-white/30" />
               {Math.floor(timeLeft / 60)}<span className="text-white/30 mx-1">:</span>{String(timeLeft % 60).padStart(2, '0')}
            </div>
            <div className="flex items-center gap-8">
               <div className="flex flex-col items-end">
-                 <span className="font-mono text-[10px] text-white/50 tracking-[0.5em] uppercase">Cycles</span>
-                 <span className="font-display font-black text-2xl md:text-3xl text-white">{team?.scores?.[`round${round}`] || 0}</span>
+                 <span className="font-mono text-xs text-white/50 tracking-[0.5em] uppercase">Cycles</span>
+                 <span className="font-display font-black text-3xl md:text-4xl text-white">{team?.scores?.[`round${round}`] || 0}</span>
               </div>
            </div>
         </div>
@@ -483,7 +533,12 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                <div className="bg-[#000]/40 border border-[#00FF66]/20 rounded-[30px] p-12 backdrop-blur-3xl text-center max-w-xl w-full">
                  <CheckCircle2 className="w-14 h-14 mx-auto mb-6 text-[#00FF66]" />
                  <h2 className="font-display font-light text-4xl text-[#00FF66] mb-4 uppercase">Phase Secured</h2>
-                 <button onClick={() => router.push(`/team/${teamId}`)} className="mt-8 px-10 py-4 border border-[#00FF66]/40 text-[#00FF66] font-mono text-xs tracking-[0.2em] uppercase rounded-full">Dashboard</button>
+                 <button onClick={() => {
+                   if (round === 3) router.push('/leaderboard');
+                   else router.push(`/team/${teamId}`);
+                 }} className="mt-8 px-10 py-4 border border-[#00FF66]/40 text-[#00FF66] hover:bg-[#00FF66]/10 font-mono text-xs tracking-[0.2em] uppercase rounded-full transition-colors">
+                   {round === 3 ? 'View Leaderboard' : 'Dashboard'}
+                 </button>
                </div>
             ) : (
                <AnimatePresence mode="wait">
@@ -497,15 +552,15 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                       <div className="w-full max-w-3xl mb-12">
                         <div className="flex items-center justify-between mb-4 px-2">
                            <div className="flex flex-col">
-                              <span className="font-mono text-[9px] text-white/30 uppercase tracking-[0.4em]">Mission Progress</span>
-                              <span className="font-display font-black text-2xl text-white tracking-widest">
+                              <span className="font-mono text-xs text-white/30 uppercase tracking-[0.4em]">Mission Progress</span>
+                              <span className="font-display font-black text-3xl text-white tracking-widest">
                                  {questions.filter(q => q.isAnswered).length} / {questions.length}
-                                 <span className="text-[10px] text-white/30 ml-3 font-mono tracking-normal uppercase">Nodes Attended</span>
+                                 <span className="text-xs text-white/30 ml-3 font-mono tracking-normal uppercase">Nodes Attended</span>
                               </span>
                            </div>
                            <div className="text-right">
-                              <span className="font-mono text-[9px] text-white/30 uppercase tracking-[0.4em]">Completion</span>
-                              <div className="font-display font-black text-2xl text-white tracking-widest">
+                              <span className="font-mono text-xs text-white/30 uppercase tracking-[0.4em]">Completion</span>
+                              <div className="font-display font-black text-3xl text-white tracking-widest">
                                  {Math.round((questions.filter(q => q.isAnswered).length / questions.length) * 100)}%
                               </div>
                            </div>
@@ -520,7 +575,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                         </div>
                       </div>
 
-                      <div className="font-mono text-[10px] text-white/50 tracking-[0.8em] uppercase mb-6 flex items-center gap-4 w-full max-w-3xl">
+                      <div className="font-mono text-xs text-white/50 tracking-[0.8em] uppercase mb-6 flex items-center gap-4 w-full max-w-3xl">
                          <span className="h-[1px] flex-1 opacity-30" style={{ backgroundColor: currentHexColor }} />
                          NODE {currentQIdx + 1} / {questions.length}
                          <span className="h-[1px] flex-1 opacity-30" style={{ backgroundColor: currentHexColor }} />
@@ -529,11 +584,11 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                      <div className="relative bg-[#000]/60 backdrop-blur-2xl border border-white/10 p-6 md:p-8 text-center w-full max-w-3xl clip-angled-lg mb-6">
                         {/* Emoji Clue Display — shown prominently for Round 2 */}
                         {currentQ.emojiClue && (
-                          <div className="text-5xl md:text-6xl mb-4 tracking-widest leading-relaxed">
+                          <div className="text-6xl md:text-7xl mb-4 tracking-widest leading-relaxed">
                             {currentQ.emojiClue}
                           </div>
                         )}
-                        <h2 className="font-display font-bold text-2xl md:text-3xl text-white leading-tight">
+                        <h2 className="font-display font-bold text-3xl md:text-4xl text-white leading-tight">
                            <ScrambleText text={currentQ.question} duration={1000} />
                         </h2>
                      </div>
@@ -546,27 +601,32 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                          accentColor={currentHexColor} 
                        />
                      ) : (
-                       <div className="w-full flex flex-col items-center gap-6">
-                          <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div className="w-full flex flex-col items-center gap-8 bg-black/40 p-8 rounded-3xl border border-white/5 shadow-2xl">
+                          <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
                             {currentQ.options?.map((opt, i) => (
                               <motion.button
                                 key={i}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => !submitting && setSelectedAnswer(opt)}
                                 disabled={submitting}
-                                className={`p-4 md:p-5 text-left border-l-4 clip-slant bg-black/60 hover:bg-black/80 transition-all ${
+                                className={`relative p-5 md:p-6 text-left border rounded-xl backdrop-blur-md transition-all ${
                                   selectedAnswer === opt 
-                                    ? 'border-white bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.1)]' 
-                                    : 'border-white/10 hover:border-white/40'
+                                    ? 'border-white bg-white/20 shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
+                                    : 'border-white/10 bg-white/5 hover:border-white/40 hover:bg-white/10'
                                 }`}
-                                style={{ borderLeftColor: selectedAnswer === opt ? currentHexColor : undefined }}
+                                style={{ borderColor: selectedAnswer === opt ? currentHexColor : undefined }}
                               >
-                                <div className="flex items-center gap-5">
-                                  <div className={`w-8 h-8 border flex items-center justify-center font-display font-black clip-hex transition-colors ${
-                                    selectedAnswer === opt ? 'bg-white text-black border-white' : 'border-white/20 text-white/40'
-                                  }`}>
+                                {selectedAnswer === opt && (
+                                  <div className="absolute inset-0 rounded-xl opacity-20 pointer-events-none" style={{ backgroundColor: currentHexColor }} />
+                                )}
+                                <div className="flex items-center gap-5 relative z-10">
+                                  <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-display font-black text-xl transition-colors shadow-lg ${
+                                    selectedAnswer === opt ? 'bg-black text-white border-white' : 'border-white/20 text-white/50 bg-black/50'
+                                  }`} style={{ borderColor: selectedAnswer === opt ? currentHexColor : undefined }}>
                                     {['A', 'B', 'C', 'D'][i]}
                                   </div>
-                                  <span className={`text-base md:text-lg font-body tracking-wide transition-colors ${selectedAnswer === opt ? 'text-white' : 'text-white/60'}`}>{opt}</span>
+                                  <span className={`text-lg md:text-xl font-body font-bold tracking-wide transition-colors ${selectedAnswer === opt ? 'text-white' : 'text-white/70'}`}>{opt}</span>
                                 </div>
                               </motion.button>
                             ))}
@@ -577,10 +637,10 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                             animate={{ opacity: selectedAnswer ? 1 : 0, y: selectedAnswer ? 0 : 10 }}
                             disabled={!selectedAnswer || submitting}
                             onClick={() => submitAnswer(selectedAnswer)}
-                            className="group relative flex items-center gap-3 px-10 py-4 bg-white text-black font-display font-black tracking-[0.3em] uppercase clip-slant transition-all hover:scale-105 active:scale-95 disabled:opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+                            className="group relative flex items-center justify-center gap-4 px-12 py-5 bg-white text-black font-display font-black text-lg tracking-[0.3em] uppercase rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-0 shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-full max-w-md"
                             style={{ backgroundColor: currentHexColor }}
                           >
-                            <Send size={18} />
+                            <Send size={24} />
                             Transmit Signature
                           </motion.button>
                         </div>
@@ -591,6 +651,192 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
             )}
          </div>
       </div>
+
+      {/* F1-Style Live Leaderboard */}
+      {isRoundActive && (
+        <div className="absolute right-0 top-[88px] z-50 w-72 hidden xl:flex flex-col">
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes f1-scan { 0% { transform: translateY(-100%); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(400%); opacity: 0; } }
+            @keyframes rank-pulse { 0%,100% { box-shadow: 0 0 0px currentColor; } 50% { box-shadow: 0 0 12px currentColor; } }
+            @keyframes data-flicker { 0%,100% { opacity: 1; } 95% { opacity: 0.7; } }
+            .f1-row-enter { animation: f1-row-in 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+            @keyframes f1-row-in { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
+            .lb-score { animation: data-flicker 4s infinite; }
+          `}} />
+
+          {/* Panel Header */}
+          <div className="relative bg-black/80 backdrop-blur-2xl border-l border-t border-b border-white/10 overflow-hidden"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 16px 100%, 0 calc(100% - 16px))' }}>
+            
+            {/* Accent top bar */}
+            <div className="absolute top-0 left-0 w-full h-[2px]" style={{ background: `linear-gradient(to right, transparent, ${currentHexColor}, transparent)` }} />
+            
+            {/* Scan line */}
+            <div className="absolute left-0 w-full h-8 opacity-10 pointer-events-none" 
+              style={{ background: `linear-gradient(to bottom, transparent, ${currentHexColor}, transparent)`, animation: 'f1-scan 4s linear infinite' }} />
+
+            <div className="relative flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Activity size={13} style={{ color: currentHexColor }} />
+                  <div className="absolute inset-0 animate-ping opacity-40" style={{ color: currentHexColor }}>
+                    <Activity size={13} />
+                  </div>
+                </div>
+                <span className="font-display font-black text-[10px] uppercase tracking-[0.35em] text-white">Live Timing</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: currentHexColor, boxShadow: `0 0 6px ${currentHexColor}` }} />
+                <span className="font-mono text-[9px] tracking-widest uppercase" style={{ color: currentHexColor }}>
+                  Phase 0{round}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Rank Rows */}
+          <div className="bg-black/70 backdrop-blur-2xl border-l border-b border-white/[0.07] flex flex-col overflow-hidden"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 0px) 100%, 16px 100%, 0 100%)' }}>
+            
+            {(() => {
+              const topN = leaderboard.slice(0, 8);
+              const myTeam = leaderboard.find(t => t.teamId === team?.teamId);
+              const myRankInTopN = topN.find(t => t.teamId === team?.teamId);
+              const rows = [...topN];
+              
+              // Medal colors for top 3
+              const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+              const medalGlows  = ['rgba(255,215,0,0.3)', 'rgba(192,192,192,0.2)', 'rgba(205,127,50,0.2)'];
+
+              return (
+                <>
+                  {rows.map((t, idx) => {
+                    const isMe = t.teamId === team?.teamId;
+                    const isMedal = idx < 3;
+                    const accentCol = isMedal ? medalColors[idx] : isMe ? currentHexColor : 'rgba(255,255,255,0.3)';
+                    const score = t.scores?.[`round${round}`] || 0;
+
+                    return (
+                      <motion.div
+                        key={t.teamId}
+                        layout
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.35, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative flex items-center group"
+                        style={{
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          background: isMe
+                            ? `linear-gradient(to right, ${currentHexColor}18, ${currentHexColor}08, transparent)`
+                            : isMedal
+                            ? `linear-gradient(to right, ${medalColors[idx]}10, transparent)`
+                            : 'transparent',
+                        }}
+                      >
+                        {/* Left accent bar */}
+                        <div className="absolute left-0 top-0 bottom-0 w-[3px] transition-all duration-300"
+                          style={{
+                            backgroundColor: isMe ? currentHexColor : isMedal ? medalColors[idx] : 'transparent',
+                            boxShadow: isMe ? `0 0 8px ${currentHexColor}` : isMedal ? `0 0 6px ${medalColors[idx]}` : 'none',
+                          }} />
+
+                        {/* Rank Number */}
+                        <div className="flex-shrink-0 w-10 flex items-center justify-center py-3 pl-3">
+                          {isMedal ? (
+                            <div className="w-6 h-6 rounded-sm flex items-center justify-center font-display font-black text-[11px]"
+                              style={{
+                                backgroundColor: `${medalColors[idx]}22`,
+                                color: medalColors[idx],
+                                boxShadow: `0 0 8px ${medalGlows[idx]}`,
+                                border: `1px solid ${medalColors[idx]}50`,
+                              }}>
+                              {t.rank}
+                            </div>
+                          ) : (
+                            <span className="font-mono text-[11px] font-bold" style={{ color: isMe ? currentHexColor : 'rgba(255,255,255,0.25)' }}>
+                              {String(t.rank).padStart(2, '0')}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Team Name */}
+                        <div className="flex-1 min-w-0 pr-2 py-3">
+                          <div className={`font-display font-black text-[11px] uppercase tracking-wider truncate transition-colors ${isMe ? 'text-white' : 'text-white/50 group-hover:text-white/70'}`}>
+                            {t.teamName}
+                          </div>
+                          {isMe && (
+                            <div className="font-mono text-[8px] tracking-[0.3em] uppercase mt-0.5" style={{ color: currentHexColor }}>
+                              ◆ YOU
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Score */}
+                        <div className="flex-shrink-0 pr-4 py-3 text-right">
+                          <div className="lb-score font-display font-black text-sm leading-none"
+                            style={{ color: isMe ? currentHexColor : isMedal ? medalColors[idx] : 'rgba(255,255,255,0.6)' }}>
+                            {score}
+                          </div>
+                          <div className="font-mono text-[7px] text-white/20 tracking-widest uppercase mt-0.5">pts</div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Separator + current team if not in top 8 */}
+                  {myTeam && !myRankInTopN && (
+                    <>
+                      <div className="flex items-center gap-2 px-4 py-1">
+                        <div className="flex-1 h-[1px] bg-white/5" />
+                        <span className="font-mono text-[8px] text-white/20 tracking-widest">• • •</span>
+                        <div className="flex-1 h-[1px] bg-white/5" />
+                      </div>
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="relative flex items-center"
+                        style={{ background: `linear-gradient(to right, ${currentHexColor}22, ${currentHexColor}0a, transparent)` }}
+                      >
+                        <div className="absolute left-0 top-0 bottom-0 w-[3px]"
+                          style={{ backgroundColor: currentHexColor, boxShadow: `0 0 8px ${currentHexColor}` }} />
+                        <div className="flex-shrink-0 w-10 flex items-center justify-center py-3 pl-3">
+                          <span className="font-mono text-[11px] font-bold" style={{ color: currentHexColor }}>
+                            {String(myTeam.rank).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0 pr-2 py-3">
+                          <div className="font-display font-black text-[11px] uppercase tracking-wider truncate text-white">
+                            {myTeam.teamName}
+                          </div>
+                          <div className="font-mono text-[8px] tracking-[0.3em] uppercase mt-0.5" style={{ color: currentHexColor }}>◆ YOU</div>
+                        </div>
+                        <div className="flex-shrink-0 pr-4 py-3 text-right">
+                          <div className="font-display font-black text-sm leading-none" style={{ color: currentHexColor }}>
+                            {myTeam.scores?.[`round${round}`] || 0}
+                          </div>
+                          <div className="font-mono text-[7px] text-white/20 tracking-widest uppercase mt-0.5">pts</div>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-4 py-2 border-t border-white/[0.04]">
+              <span className="font-mono text-[8px] text-white/15 uppercase tracking-[0.4em]">
+                {leaderboard.length} Nodes
+              </span>
+              <div className="flex items-center gap-1">
+                <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
+                <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '0.4s' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

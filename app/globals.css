@@ -33,6 +33,7 @@ html, body {
   background-color: var(--dark-950);
   color: #e0e0e0;
   overflow-x: hidden;
+  font-size: 78%;
 }
 
 /* Custom Scrollbar */

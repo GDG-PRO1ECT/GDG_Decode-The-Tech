@@ -27,12 +27,20 @@ export async function POST(req) {
   // Helper function to create a single team object
   async function prepareTeam(teamData, indexOffset = 0) {
     const { teamName, teamNumber, players } = teamData;
-    const tNum = teamNumber || (await Team.countDocuments()) + indexOffset + 1;
-    const teamId = `team-${String(tNum).padStart(3, '0')}`;
-    
-    // Check for existing
-    const existing = await Team.findOne({ teamId });
-    if (existing) return null;
+
+    // Find the highest existing teamNumber so we never collide with existing IDs
+    const maxDoc = await Team.findOne({}).sort({ teamNumber: -1 }).select('teamNumber').lean();
+    const baseNum = maxDoc ? maxDoc.teamNumber : 0;
+    let tNum = teamNumber || (baseNum + indexOffset + 1);
+
+    // Safety: keep incrementing until the ID is free
+    let teamId = `team-${String(tNum).padStart(3, '0')}`;
+    let attempts = 0;
+    while (await Team.findOne({ teamId }).lean()) {
+      tNum += 1;
+      teamId = `team-${String(tNum).padStart(3, '0')}`;
+      if (++attempts > 100) break; // guard against infinite loop
+    }
 
     // Fetch questions for shuffling (doing this once outside for bulk)
     return {
@@ -84,8 +92,6 @@ export async function POST(req) {
     return NextResponse.json({ teams: created }, { status: 201 });
   } else {
     const t = await prepareTeam(body);
-    if (!t) return NextResponse.json({ error: 'Team already exists' }, { status: 409 });
-    
     const team = await Team.create({ ...t, ...commonData });
     return NextResponse.json({ team }, { status: 201 });
   }

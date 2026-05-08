@@ -12,8 +12,9 @@ export default function HomePage() {
   const [teamId, setTeamId] = useState('');
   
   const [regForm, setRegForm] = useState({
-    teamName: '', teamNumber: '', players: ['', '', '']
+    teamName: '', players: ['', '', '']
   });
+  const [registeredTeamId, setRegisteredTeamId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function HomePage() {
 
   async function handleRegister(e) {
     e.preventDefault();
-    if (!regForm.teamName || !regForm.teamNumber || regForm.players.some(p => !p.trim())) {
+    if (!regForm.teamName || regForm.players.some(p => !p.trim())) {
       setMsg({ text: 'ERR: PARAMETERS INCOMPLETE.', type: 'error' });
       return;
     }
@@ -33,12 +34,13 @@ export default function HomePage() {
     try {
       const res = await fetch('/api/teams', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamName: regForm.teamName, teamNumber: parseInt(regForm.teamNumber), players: regForm.players.filter(Boolean) })
+        body: JSON.stringify({ teamName: regForm.teamName, players: regForm.players.filter(Boolean) })
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg({ text: `UPLINK ESTABLISHED. KEY: ${data.team.teamId}`, type: 'success' });
-        setTimeout(() => window.location.href = `/team/${data.team.teamId}`, 2000);
+        setRegisteredTeamId(data.team.teamId);
+        setMsg({ text: `UPLINK ESTABLISHED. SECTION: ${String(data.team.teamNumber).padStart(2, '0')} // KEY: ${data.team.teamId}`, type: 'success' });
+        setTimeout(() => window.location.href = `/team/${data.team.teamId}`, 4000);
       } else {
         setMsg({ text: data.error || 'AUTH FAILED.', type: 'error' });
         setLoading(false);
@@ -67,17 +69,17 @@ export default function HomePage() {
       <motion.header initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8 }} className="relative z-50 w-full">
         <div className="clip-angled-br bg-dark-900/90 backdrop-blur-md border-b border-r border-white/10 p-6 md:px-12 flex justify-between items-center max-w-5xl mx-auto mt-0 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-4">
-            <GdgLogo className="w-8 h-8 animate-holo-flicker drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+            <GdgLogo className="w-12 h-12 animate-holo-flicker drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
             <div className="flex flex-col">
-              <span className="font-display font-black tracking-[0.3em] text-white text-sm leading-tight">GDG_CORE</span>
-              <span className="font-mono text-[9px] text-gdg-blue tracking-[0.4em] uppercase">Decode The Tech // 2026</span>
+              <span className="font-display font-black tracking-[0.3em] text-white text-base leading-tight">GDG_CORE</span>
+              <span className="font-mono text-xs text-gdg-blue tracking-[0.4em] uppercase">Decode The Tech // 2026</span>
             </div>
           </div>
           <div className="flex gap-4">
-            <Link href="/leaderboard" className="font-display font-bold text-[10px] tracking-widest uppercase text-gray-400 hover:text-white transition-all flex items-center gap-2 group">
+            <Link href="/leaderboard" className="font-display font-bold text-xs tracking-widest uppercase text-gray-400 hover:text-white transition-all flex items-center gap-2 group">
               <span className="w-2 h-2 bg-gdg-blue rounded-full group-hover:shadow-[0_0_10px_#4285F4]"></span> TELEMETRY
             </Link>
-            <Link href="/admin" className="font-display font-bold text-[10px] tracking-widest uppercase text-gray-400 hover:text-white transition-all flex items-center gap-2 group">
+            <Link href="/admin" className="font-display font-bold text-xs tracking-widest uppercase text-gray-400 hover:text-white transition-all flex items-center gap-2 group">
               <span className="w-2 h-2 bg-gdg-red rounded-full group-hover:shadow-[0_0_10px_#EA4335]"></span> SUDO
             </Link>
           </div>
@@ -91,7 +93,7 @@ export default function HomePage() {
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex-1 flex flex-col items-start text-left relative z-20">
           
           <motion.div variants={itemVariants} className="inline-flex items-center gap-3 px-4 py-1.5 border-l-2 border-gdg-green bg-gradient-to-r from-gdg-green/10 to-transparent mb-8">
-            <span className="font-mono text-[10px] tracking-[0.4em] text-gdg-green uppercase font-bold animate-holo-flicker">SYS_ONLINE</span>
+            <span className="font-mono text-xs tracking-[0.4em] text-gdg-green uppercase font-bold animate-holo-flicker">SYS_ONLINE</span>
           </motion.div>
 
           <motion.h1 variants={itemVariants} className="font-display font-black leading-[0.85] relative z-10 uppercase flex flex-col items-start mb-6 drop-shadow-2xl">
@@ -129,7 +131,7 @@ export default function HomePage() {
               { title: 'PHASE 02: ANALYZE', color: 'gdg-yellow' },
               { title: 'PHASE 03: REVERSE', color: 'gdg-red' },
             ].map((f, i) => (
-              <div key={i} className={`clip-angled px-6 py-2.5 bg-dark-900 border border-${f.color}/30 text-white font-display text-[10px] tracking-widest font-bold uppercase relative overflow-hidden group`}>
+              <div key={i} className={`clip-angled px-6 py-2.5 bg-dark-900 border border-${f.color}/30 text-white font-display text-xs md:text-sm tracking-widest font-bold uppercase relative overflow-hidden group`}>
                 <div className={`absolute inset-0 bg-${f.color}/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700`}></div>
                 <span className={`text-${f.color} mr-2 group-hover:animate-pulse`}>/</span> {f.title}
               </div>
@@ -149,10 +151,10 @@ export default function HomePage() {
               
               {/* Internal Tabs */}
               <div className="flex gap-4 mb-10 border-b border-white/5 pb-4">
-                <button onClick={() => setActiveTab('join')} className={`font-display text-[11px] font-black tracking-[0.3em] uppercase transition-all ${activeTab === 'join' ? 'text-white' : 'text-gray-600 hover:text-gray-400'}`}>
+                <button onClick={() => setActiveTab('join')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'join' ? 'bg-gdg-blue/20 text-white border-b-2 border-gdg-blue shadow-[0_0_20px_rgba(66,133,244,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
                   {activeTab === 'join' && <span className="text-gdg-blue mr-2">►</span>}UPLINK
                 </button>
-                <button onClick={() => setActiveTab('register')} className={`font-display text-[11px] font-black tracking-[0.3em] uppercase transition-all ${activeTab === 'register' ? 'text-white' : 'text-gray-600 hover:text-gray-400'}`}>
+                <button onClick={() => setActiveTab('register')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'register' ? 'bg-gdg-yellow/20 text-white border-b-2 border-gdg-yellow shadow-[0_0_20px_rgba(251,188,5,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
                   {activeTab === 'register' && <span className="text-gdg-yellow mr-2">►</span>}NEW_NODE
                 </button>
               </div>
@@ -162,8 +164,8 @@ export default function HomePage() {
                   {activeTab === 'join' && (
                     <motion.div key="join" initial={{ opacity: 0, filter: 'blur(10px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, filter: 'blur(10px)' }} className="h-full flex flex-col justify-center gap-8">
                       <div className="space-y-2">
-                        <div className="font-mono text-[10px] text-gdg-blue tracking-[0.4em] uppercase">Authentication Required</div>
-                        <div className="font-display text-2xl font-black text-white tracking-widest">ENTER ACCESS VECTOR</div>
+                        <div className="font-mono text-xs text-gdg-blue tracking-[0.4em] uppercase">Authentication Required</div>
+                        <div className="font-display text-3xl font-black text-white tracking-widest">ENTER ACCESS VECTOR</div>
                       </div>
                       
                       <div className="relative">
@@ -171,11 +173,11 @@ export default function HomePage() {
                         <input
                           type="text" placeholder="ID: TM-001" value={teamId} onChange={e => setTeamId(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && teamId && (window.location.href = `/team/${teamId}`)}
-                          className="w-full bg-transparent border-b border-white/20 px-6 py-4 text-white font-mono text-xl tracking-[0.2em] focus:border-gdg-blue outline-none transition-all placeholder:text-gray-700"
+                          className="w-full bg-transparent border-b border-white/20 px-6 py-4 text-white font-mono text-2xl tracking-[0.2em] focus:border-gdg-blue outline-none transition-all placeholder:text-gray-700"
                         />
                       </div>
                       
-                      <button onClick={() => teamId && (window.location.href = `/team/${teamId}`)} className="clip-angled-br w-full bg-gdg-blue/10 hover:bg-gdg-blue text-gdg-blue hover:text-white border border-gdg-blue/50 py-5 font-display font-black tracking-[0.3em] text-[11px] uppercase transition-all shadow-[0_0_20px_rgba(66,133,244,0.1)] hover:shadow-[0_0_30px_rgba(66,133,244,0.4)] mt-auto">
+                      <button onClick={() => teamId && (window.location.href = `/team/${teamId}`)} className="clip-angled-br w-full bg-gdg-blue/20 hover:bg-gdg-blue text-white border border-gdg-blue py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all shadow-[0_0_20px_rgba(66,133,244,0.3)] hover:shadow-[0_0_40px_rgba(66,133,244,0.6)] mt-auto">
                         INITIATE CONNECTION
                       </button>
                     </motion.div>
@@ -186,33 +188,31 @@ export default function HomePage() {
                       <form onSubmit={handleRegister} className="flex flex-col h-full gap-5">
                         
                         {msg.text && (
-                          <div className={`p-3 font-mono text-[9px] tracking-widest uppercase border-l-2 ${msg.type === 'error' ? 'border-gdg-red text-gdg-red bg-gdg-red/10' : 'border-gdg-green text-gdg-green bg-gdg-green/10'}`}>
+                          <div className={`p-3 font-mono text-xs tracking-widest uppercase border-l-2 ${msg.type === 'error' ? 'border-gdg-red text-gdg-red bg-gdg-red/10' : 'border-gdg-green text-gdg-green bg-gdg-green/10'}`}>
                             {msg.text}
                           </div>
                         )}
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <label className="font-mono text-[9px] text-gray-500 tracking-[0.3em] uppercase">Designation</label>
-                            <input required type="text" placeholder="CYBER_SQUAD" value={regForm.teamName} onChange={e => setRegForm({...regForm, teamName: e.target.value})} className="w-full bg-dark-800/50 border border-white/10 px-4 py-3 text-white font-mono text-xs focus:border-gdg-yellow outline-none transition-colors" />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="font-mono text-[9px] text-gray-500 tracking-[0.3em] uppercase">Sector ID</label>
-                            <input required type="number" placeholder="01" min="1" value={regForm.teamNumber} onChange={e => setRegForm({...regForm, teamNumber: e.target.value})} className="w-full bg-dark-800/50 border border-white/10 px-4 py-3 text-white font-mono text-xs focus:border-gdg-yellow outline-none transition-colors" />
-                          </div>
+                        <div className="space-y-1">
+                          <label className="font-mono text-xs text-gray-500 tracking-[0.3em] uppercase">Designation</label>
+                          <input required type="text" placeholder="CYBER_SQUAD" value={regForm.teamName} onChange={e => setRegForm({...regForm, teamName: e.target.value})} className="w-full bg-dark-800/50 border border-white/10 px-4 py-3 text-white font-mono text-sm focus:border-gdg-yellow outline-none transition-colors" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-gdg-yellow/50 animate-pulse" />
+                          <span className="font-mono text-[10px] text-gray-600 uppercase tracking-widest">Section ID will be auto-assigned upon registration</span>
                         </div>
 
                         <div className="space-y-2 mt-2">
-                           <div className="font-mono text-[9px] text-gray-500 tracking-[0.3em] uppercase">Operatives [3 REQ]</div>
+                           <div className="font-mono text-xs text-gray-500 tracking-[0.3em] uppercase">Operatives [3 REQ]</div>
                           {[0, 1, 2].map(idx => (
                             <div key={idx} className="flex items-stretch border border-white/5 bg-dark-800/30 focus-within:border-white/20 transition-colors">
-                              <div className={`w-8 flex items-center justify-center font-mono text-[9px] border-r border-white/5 bg-dark-900 ${['text-gdg-blue', 'text-gdg-red', 'text-gdg-yellow'][idx]}`}>0{idx+1}</div>
-                              <input required type="text" placeholder="NAME_ALIAS" value={regForm.players[idx]} onChange={e => { const newP = [...regForm.players]; newP[idx] = e.target.value; setRegForm({...regForm, players: newP}); }} className="w-full bg-transparent px-3 py-2 text-xs font-mono text-white outline-none placeholder:text-gray-700" />
+                              <div className={`w-8 flex items-center justify-center font-mono text-xs border-r border-white/5 bg-dark-900 ${['text-gdg-blue', 'text-gdg-red', 'text-gdg-yellow'][idx]}`}>0{idx+1}</div>
+                              <input required type="text" placeholder="NAME_ALIAS" value={regForm.players[idx]} onChange={e => { const newP = [...regForm.players]; newP[idx] = e.target.value; setRegForm({...regForm, players: newP}); }} className="w-full bg-transparent px-3 py-2 text-sm font-mono text-white outline-none placeholder:text-gray-700" />
                             </div>
                           ))}
                         </div>
 
-                        <button type="submit" disabled={loading} className="clip-angled-br w-full bg-gdg-yellow/10 hover:bg-gdg-yellow text-gdg-yellow hover:text-black border border-gdg-yellow/50 py-5 font-display font-black tracking-[0.3em] text-[11px] uppercase transition-all hover:shadow-[0_0_30px_rgba(251,188,5,0.4)] mt-auto disabled:opacity-50">
+                        <button type="submit" disabled={loading} className="clip-angled-br w-full bg-gdg-yellow/20 hover:bg-gdg-yellow text-white hover:text-black border border-gdg-yellow py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all hover:shadow-[0_0_40px_rgba(251,188,5,0.6)] mt-auto disabled:opacity-50">
                           {loading ? 'PROCESSING...' : 'REGISTER NODE'}
                         </button>
                       </form>
@@ -236,8 +236,8 @@ export default function HomePage() {
       
       {/* Footer */}
       <div className="absolute bottom-6 w-full text-center z-10 flex flex-col items-center gap-2">
-         <GdgLogo className="w-5 h-5 opacity-50 saturate-0" />
-         <div className="font-mono text-[8px] text-gray-600 tracking-[0.5em] uppercase">SECURE CONNECTION BY GOOGLE DEVELOPER GROUPS</div>
+         <GdgLogo className="w-6 h-6 opacity-50 saturate-0" />
+         <div className="font-mono text-[10px] text-gray-600 tracking-[0.5em] uppercase">SECURE CONNECTION BY GOOGLE DEVELOPER GROUPS</div>
       </div>
     </div>
   );

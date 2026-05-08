@@ -11,6 +11,7 @@ export default function LeaderboardPage() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -26,6 +27,14 @@ export default function LeaderboardPage() {
       setSession(data.session);
       setLastUpdated(new Date());
       setLoading(false);
+
+      if ((data.session?.status === 'finished' || data.session?.status === 'round3_ended') && questions.length === 0) {
+        const qRes = await fetch('/api/leaderboard/questions');
+        if (qRes.ok) {
+          const qData = await qRes.json();
+          setQuestions(qData.questions || []);
+        }
+      }
     } catch {
       setLoading(false);
     }
@@ -282,6 +291,99 @@ export default function LeaderboardPage() {
               <div className="text-center py-24 tech-border clip-angled bg-dark-900/50 backdrop-blur-sm relative mt-6 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                 <div className="text-5xl mb-6 opacity-30 grayscale animate-pulse">📡</div>
                 <div className="font-mono text-[10px] text-gray-500 tracking-[0.4em] uppercase bg-dark-950 inline-block px-8 py-3 border border-white/10 clip-hex">SYS_ERR: NO_SIGNAL_DETECTED</div>
+              </div>
+            )}
+
+            {(session?.status === 'finished' || session?.status === 'round3_ended') && questions.length > 0 && (
+              <div className="mt-32 pb-32 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
+                <div className="flex items-center gap-6 mb-16">
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-gdg-blue/50 to-transparent" />
+                  <div className="flex flex-col items-center">
+                    <span className="font-display font-black text-3xl md:text-5xl tracking-[0.3em] text-white uppercase drop-shadow-[0_0_15px_rgba(66,133,244,0.4)]">Global Intel</span>
+                    <span className="font-mono text-[10px] text-gdg-blue tracking-[0.5em] uppercase mt-2">Mission Declassification</span>
+                  </div>
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-gdg-blue/50 to-transparent" />
+                </div>
+
+                <div className="grid gap-12 max-w-5xl mx-auto">
+                  {[1, 2, 3].map(round => {
+                    const roundQuestions = questions.filter(q => q.round === round);
+                    if (roundQuestions.length === 0) return null;
+                    
+                    const roundColor = round === 1 ? 'gdg-blue' : round === 2 ? 'gdg-yellow' : 'gdg-green';
+                    const hexColor = round === 1 ? '#4285F4' : round === 2 ? '#FBBC05' : '#34A853';
+
+                    return (
+                      <div key={round} className="space-y-6">
+                        <div className={`font-display font-black text-2xl text-${roundColor} tracking-[0.2em] uppercase mb-8 border-b border-${roundColor}/20 pb-4`}>
+                          Phase 0{round} Analysis
+                        </div>
+
+                        {roundQuestions.map((q, idx) => (
+                          <div key={q._id} className={`bg-dark-900/60 border-l-4 border-${roundColor} rounded-r-2xl p-6 md:p-8 hover:bg-dark-900/80 transition-colors shadow-[0_5px_20px_rgba(0,0,0,0.3)] relative overflow-hidden`}>
+                            {/* Number background */}
+                            <div className="absolute right-[-20px] top-[-20px] text-9xl font-black opacity-[0.03] select-none pointer-events-none" style={{ color: hexColor }}>
+                              {String(idx + 1).padStart(2, '0')}
+                            </div>
+
+                            <div className="font-mono text-[10px] text-gray-500 tracking-[0.4em] mb-4 flex items-center gap-3 uppercase">
+                              <span className={`w-1.5 h-1.5 rounded-full bg-${roundColor}`} /> Node {idx + 1}
+                            </div>
+                            
+                            {q.emojiClue && (
+                              <div className="text-4xl mb-4 tracking-widest">{q.emojiClue}</div>
+                            )}
+                            
+                            <div className="font-body text-white font-bold text-lg md:text-xl leading-relaxed mb-6">
+                              {q.question}
+                            </div>
+
+                            {q.type === 'match' && q.matchData ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div className="space-y-2">
+                                  <div className="font-mono text-[9px] text-gray-500 tracking-widest uppercase mb-2">Terminal A</div>
+                                  {q.matchData.left.map((item, i) => (
+                                    <div key={i} className="bg-dark-950 p-3 rounded-lg border border-white/5 font-body text-sm text-gray-300">{item}</div>
+                                  ))}
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="font-mono text-[9px] text-gray-500 tracking-widest uppercase mb-2">Terminal B (Correct Pairs)</div>
+                                  {q.matchData.right.map((item, i) => (
+                                    <div key={i} className={`bg-${roundColor}/10 p-3 rounded-lg border border-${roundColor}/30 font-body text-sm text-white flex items-center justify-between`}>
+                                      <span>{item}</span>
+                                      <span className={`text-${roundColor} text-lg`}>✓</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-dark-950/80 rounded-xl p-4 md:p-5 border border-white/5 flex items-start gap-4 mb-6">
+                                <div className={`w-8 h-8 rounded-full bg-${roundColor}/10 border border-${roundColor}/30 flex items-center justify-center flex-shrink-0 mt-1`}>
+                                  <span className={`text-${roundColor} text-lg`}>✓</span>
+                                </div>
+                                <div>
+                                  <div className={`font-mono text-[9px] tracking-[0.3em] uppercase mb-1 text-${roundColor}`}>Correct Answer</div>
+                                  <div className="font-display font-bold text-white text-lg">{q.correctAnswer}</div>
+                                </div>
+                              </div>
+                            )}
+
+                            {q.explanation && (
+                              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 md:p-6 mt-6">
+                                <div className="font-mono text-[9px] text-gray-400 tracking-[0.3em] uppercase mb-2 flex items-center gap-2">
+                                  <span className="text-gray-500">ℹ</span> Analysis / Explanation
+                                </div>
+                                <div className="font-body text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                  {q.explanation}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </>

@@ -16,10 +16,11 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const session = await GameSession.findOne({ sessionId: 'main' });
-  if (!session) {
-    return NextResponse.json({ error: 'No game session found' }, { status: 404 });
-  }
+  try {
+    const session = await GameSession.findOne({ sessionId: 'main' });
+    if (!session) {
+      return NextResponse.json({ error: 'No game session found' }, { status: 404 });
+    }
 
   if (action === 'start_round') {
     const roundKey = `round${round}`;
@@ -118,5 +119,9 @@ export async function POST(req) {
     return NextResponse.json({ message: 'Game reset' });
   }
 
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+  } catch (error) {
+    console.error("Game Start API Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
