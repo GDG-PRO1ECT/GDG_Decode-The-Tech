@@ -49,19 +49,42 @@ export async function POST(req) {
     session.isPaused = false;
     await session.save();
 
-    // Calculate qualifying threshold (50% of max points for this round)
-    const roundQuestions = await Question.find({ round, isActive: true });
-    const maxPoints = roundQuestions.reduce((sum, q) => sum + (q.basePoints || 10), 0);
-    const threshold = maxPoints * 0.5;
+    // Dual-Threshold Qualification Logic
+    // A team qualifies if they are in the top 80% by rank (score + time tie-breaker)
+    // OR if they achieve at least 80% of the top total score.
+    const allTeams = await Team.find({ isActive: true, isDisqualified: { $ne: true } });
+    if (allTeams.length > 0) {
+      const roundKey = `round${round}`;
+      
+      // Sort teams exactly like the leaderboard: Score DESC, Time ASC
+      const sortedTeams = [...allTeams].sort((a, b) => {
+        if (b.scores.total !== a.scores.total) {
+          return b.scores.total - a.scores.total;
+        }
+        const getRoundCompletionTime = (t) => {
+          const answers = t.answeredQuestions?.[roundKey] || [];
+          if (answers.length === 0) return Infinity;
+          return Math.max(...answers.map(ans => new Date(ans.answeredAt).getTime()));
+        };
+        return getRoundCompletionTime(a) - getRoundCompletionTime(b);
+      });
 
-    // Get all teams
-    const allTeams = await Team.find({});
-    for (const team of allTeams) {
-      const roundScore = team.scores[`round${round}`] || 0;
-      if (roundScore < threshold) {
-        team.isEliminated = true;
-        team.eliminatedAtRound = round;
-        await team.save();
+      const rankCutoff = Math.ceil(allTeams.length * 0.8);
+      const topScore = sortedTeams[0].scores.total;
+      const scoreCutoff = topScore * 0.8;
+
+      for (let i = 0; i < sortedTeams.length; i++) {
+        const team = sortedTeams[i];
+        const rank = i + 1;
+        
+        // Qualification check: Top 80% rank OR 80% of top score
+        const isQualified = (rank <= rankCutoff) || (team.scores.total >= scoreCutoff);
+        
+        if (!isQualified && !team.isEliminated) {
+          team.isEliminated = true;
+          team.eliminatedAtRound = round;
+          await team.save();
+        }
       }
     }
 
