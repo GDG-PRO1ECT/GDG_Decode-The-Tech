@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import Team from '@/lib/models/Team';
 import Question from '@/lib/models/Question';
 import GameSession from '@/lib/models/GameSession';
+import { getGameSession } from '@/lib/sessionCache';
 
 export async function GET(req) {
   await dbConnect();
@@ -15,10 +16,22 @@ export async function GET(req) {
     return NextResponse.json({ error: 'teamId and round required' }, { status: 400 });
   }
 
-  const team = await Team.findOne({ teamId }).lean();
+  const team = await Team.findOne(
+    { teamId }, 
+    { 
+      teamName: 1, 
+      currentPlayerIndex: 1, 
+      players: 1, 
+      scores: 1, 
+      isEliminated: 1, 
+      questionOrder: 1, 
+      answeredQuestions: 1, 
+      isDisqualified: 1 
+    }
+  ).lean();
   if (!team) return NextResponse.json({ error: 'Team not found' }, { status: 404 });
 
-  const session = await GameSession.findOne({ sessionId: 'main' }).lean();
+  const session = await getGameSession();
   
   // Get all questions for this round
   const allQuestions = await Question.find({ round, isActive: true }).sort({ questionNumber: 1 }).lean();
@@ -77,10 +90,14 @@ export async function GET(req) {
     const isRoundActive = session && session.status === `round${round}_active`;
     const hasFinishedRound = answered.length >= allQuestions.length && allQuestions.length > 0;
     
-    const canShowAnswers = team.isEliminated || 
-                         (session && session.status === 'finished') || 
-                         (session && session.currentRound > round) ||
-                         hasFinishedRound;
+    const isPastRound = session && (
+      (session.status === 'finished') ||
+      (session.currentRound > round) ||
+      (session.status === `round${round}_ended`) ||
+      (session.status.startsWith('round') && parseInt(session.status.match(/\d+/)?.[0] || 0) > round)
+    );
+
+    const canShowAnswers = team.isEliminated || team.isDisqualified || isPastRound || hasFinishedRound;
 
     if (canShowAnswers) {
       safeQ.correctAnswer = q.correctAnswer;
@@ -117,6 +134,7 @@ export async function GET(req) {
       players: team.players,
       scores: team.scores,
       isEliminated: team.isEliminated,
+      isDisqualified: team.isDisqualified,
     }
   });
 }

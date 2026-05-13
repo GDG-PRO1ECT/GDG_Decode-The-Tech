@@ -20,8 +20,20 @@ const shareTechMono = Share_Tech_Mono({
 });
 
 export const metadata = {
-  title: 'Decode The Tech — Quiz Platform',
-  description: 'Crack the code behind everyday technology. The ultimate tech quiz experience.',
+  title: 'Decode The Tech — Global Tech Quiz',
+  description: 'Crack the code behind everyday technology. The ultimate high-stakes tech quiz experience by Google Developer Groups.',
+  keywords: ['GDG', 'Tech Quiz', 'Decode The Tech', 'Hackathon', 'Coding'],
+  authors: [{ name: 'GDG' }],
+  openGraph: {
+    title: 'Decode The Tech',
+    description: 'The ultimate high-stakes tech quiz experience.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Decode The Tech',
+    description: 'The ultimate high-stakes tech quiz experience.',
+  }
 };
 
 import { SpeedInsights } from "@vercel/speed-insights/next"

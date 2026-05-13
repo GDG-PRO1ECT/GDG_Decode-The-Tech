@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import GameSession from '@/lib/models/GameSession';
 import Team from '@/lib/models/Team';
 import Question from '@/lib/models/Question';
+import { invalidateSessionCache } from '@/lib/sessionCache';
 
 export async function POST(req) {
   await dbConnect();
@@ -41,6 +42,7 @@ export async function POST(req) {
     });
     
     await session.save();
+    invalidateSessionCache();
     return NextResponse.json({ session, message: `Round ${round} started` });
   }
 
@@ -48,6 +50,7 @@ export async function POST(req) {
     session.status = `round${round}_ended`;
     session.isPaused = false;
     await session.save();
+    invalidateSessionCache();
 
     // Dual-Threshold Qualification Logic
     // A team qualifies if they are in the top 80% by rank (score + time tie-breaker)
@@ -101,6 +104,7 @@ export async function POST(req) {
     // We keep roundEndTime as is, but UI will read timeRemainingAtPause or we can freeze it.
     // Actually, setting roundEndTime to null might break things, we just rely on isPaused.
     await session.save();
+    invalidateSessionCache();
     return NextResponse.json({ session, message: `Round ${round} paused` });
   }
 
@@ -111,12 +115,14 @@ export async function POST(req) {
     // Shift the end time by adding the remaining time
     session.roundEndTime = new Date(now.getTime() + (session.timeRemainingAtPause || 0));
     await session.save();
+    invalidateSessionCache();
     return NextResponse.json({ session, message: `Round ${round} resumed` });
   }
 
   if (action === 'finish') {
     session.status = 'finished';
     await session.save();
+    invalidateSessionCache();
     return NextResponse.json({ session, message: 'Game finished' });
   }
 
@@ -127,6 +133,7 @@ export async function POST(req) {
     session.roundEndTime = null;
     session.fastestAnswers = { round1: [], round2: [], round3: [] };
     await session.save();
+    invalidateSessionCache();
     
     // Reset all teams
     await Team.updateMany({}, {

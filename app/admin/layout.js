@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const GdgLogo = ({ className = "w-8 h-8" }) => (
-  <img src="/gdg-logo.png" alt="GDG Logo" className={`${className} object-contain`} />
+  <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain`} />
 );
 
 export default function AdminLayout({ children }) {
@@ -32,9 +33,11 @@ export default function AdminLayout({ children }) {
     // However, an API call ensures it matches process.env.ADMIN_PASSWORD
     fetch('/api/game/status', { headers: { 'x-admin-password': password } })
       .then(res => {
-        if (res.ok || password === 's1ddhant') { // Fallback basic check
+        if (res.ok) {
           sessionStorage.setItem('admin_pass', password);
           setIsAuthenticated(true);
+        } else if (res.status === 401) {
+          setError('ERR: INVALID MASTER KEY.');
         } else {
           setError('ERR: ACCESS DENIED.');
         }

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Network, Database, MonitorPlay, BarChart3, Zap, Skull, Power, Play, Pause, Square, AlertTriangle, ShieldAlert, Cpu, Clock, Activity, RefreshCw } from 'lucide-react';
@@ -16,7 +17,7 @@ const STATUS_MAP = {
 };
 
 const GdgLogo = ({ className = "w-8 h-8" }) => (
-  <img src="/gdg-logo.png" alt="GDG Logo" className={`${className} object-contain`} />
+  <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain`} />
 );
 
 export default function AdminDashboard({ initialSession = null, initialTeams = [], initialLeaderboard = [] }) {
@@ -31,7 +32,7 @@ export default function AdminDashboard({ initialSession = null, initialTeams = [
   const [showDanger, setShowDanger] = useState(false);
 
   useEffect(() => {
-    const poll = setInterval(fetchAll, 3000);
+    const poll = setInterval(fetchAll, 5000);
     return () => clearInterval(poll);
   }, []);
 
@@ -115,9 +116,17 @@ export default function AdminDashboard({ initialSession = null, initialTeams = [
 
       {/* Top Navbar */}
       <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="relative z-50 w-full pt-6 px-8 max-w-[1800px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <Link href="/" className="glass-panel px-6 py-2 font-mono text-[10px] text-gray-400 hover:text-white transition-all flex items-center gap-2 uppercase tracking-[0.3em] rounded-full group border border-white/5 hover:border-gdg-red/50">
-          <span className="text-gdg-red group-hover:animate-pulse">◄</span> EXIT_SUDO
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="glass-panel px-6 py-2 font-mono text-[10px] text-gray-400 hover:text-white transition-all flex items-center gap-2 uppercase tracking-[0.3em] rounded-full group border border-white/5 hover:border-gdg-red/50">
+            <span className="text-gdg-red group-hover:animate-pulse">◄</span> EXIT_SUDO
+          </Link>
+          <button 
+            onClick={() => { sessionStorage.removeItem('admin_pass'); window.location.reload(); }}
+            className="glass-panel px-6 py-2 font-mono text-[10px] text-gray-400 hover:text-gdg-red transition-all flex items-center gap-2 uppercase tracking-[0.3em] rounded-full border border-white/5 hover:border-gdg-red/30"
+          >
+            LOGOUT
+          </button>
+        </div>
         
         <div className="flex flex-1 justify-center gap-2 px-4 overflow-x-auto custom-scrollbar">
           {[

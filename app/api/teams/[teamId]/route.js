@@ -3,11 +3,17 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Team from '@/lib/models/Team';
 
+import { getGameSession } from '@/lib/sessionCache';
+
 export async function GET(req, { params }) {
   await dbConnect();
-  const team = await Team.findOne({ teamId: params.teamId }).lean();
+  const [team, session] = await Promise.all([
+    Team.findOne({ teamId: params.teamId }).lean(),
+    getGameSession()
+  ]);
+  
   if (!team) return NextResponse.json({ error: 'Team not found' }, { status: 404 });
-  return NextResponse.json({ team });
+  return NextResponse.json({ team, session });
 }
 
 export async function PATCH(req, { params }) {

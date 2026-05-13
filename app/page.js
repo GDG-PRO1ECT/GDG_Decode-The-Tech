@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GdgLogo = ({ className = "w-8 h-8" }) => (
-  <img src="/gdg-logo.png" alt="GDG Logo" className={`${className} object-contain`} />
+  <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain`} />
 );
 
 export default function HomePage() {

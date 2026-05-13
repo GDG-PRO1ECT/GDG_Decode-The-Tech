@@ -15,7 +15,8 @@ export function middleware(request) {
   }
 
   // Admin API: require x-admin-password header for mutation routes
-  if (pathname.startsWith('/api/game/start')) {
+  const adminRoutes = ['/api/game/start', '/api/admin/seed', '/api/teams/[teamId]/disqualify', '/api/questions/import'];
+  if (adminRoutes.some(route => pathname.startsWith(route.replace('[teamId]', '')))) {
     const adminPass = request.headers.get('x-admin-password');
     const expected = process.env.ADMIN_PASSWORD || 's1ddhant';
     if (!adminPass || adminPass !== expected) {

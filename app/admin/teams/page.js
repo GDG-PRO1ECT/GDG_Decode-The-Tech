@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GdgLogo = ({ className = "w-6 h-6" }) => (
-  <img src="/gdg-logo.png" alt="GDG Logo" className={`${className} object-contain drop-shadow-md`} />
+  <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain drop-shadow-md`} />
 );
 
 export default function AdminTeamsPage() {

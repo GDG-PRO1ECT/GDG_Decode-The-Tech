@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const GdgLogo = ({ className = "w-6 h-6" }) => (
-  <img src="/gdg-logo.png" alt="GDG Logo" className={`${className} object-contain`} />
+  <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain`} />
 );
 
 export default function LeaderboardPage() {
@@ -28,7 +29,7 @@ export default function LeaderboardPage() {
       setLastUpdated(new Date());
       setLoading(false);
 
-      if ((data.session?.status === 'finished' || data.session?.status === 'round3_ended') && questions.length === 0) {
+      if (questions.length === 0) {
         const qRes = await fetch('/api/leaderboard/questions');
         if (qRes.ok) {
           const qData = await qRes.json();
@@ -294,7 +295,7 @@ export default function LeaderboardPage() {
               </div>
             )}
 
-            {(session?.status === 'finished' || session?.status === 'round3_ended') && questions.length > 0 && (
+            {questions.length > 0 && (
               <div className="mt-32 pb-32 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
                 <div className="flex items-center gap-6 mb-16">
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-gdg-blue/50 to-transparent" />

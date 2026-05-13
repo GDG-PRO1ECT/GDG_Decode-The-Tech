@@ -1,9 +1,11 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShieldAlert, Send, Lock, Cpu, Flag, Zap, Gauge, Timer } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useAnimationFrame } from 'framer-motion';
+import LeaderboardPage from '@/app/leaderboard/page';
 
 // --- Standby State: Powered Down Hypercar Console ---
 // --- Standby State: Powered Down Hypercar Console ---
@@ -65,7 +67,7 @@ function PoweredDownConsole({ team, session }) {
           <div className="w-24 h-24 border border-white/10 rounded-full flex items-center justify-center mb-6 relative">
             <div className="absolute inset-0 border-2 border-dashed border-[#4285F4]/30 rounded-full animate-[spin_10s_linear_infinite]" />
             <div className="absolute inset-4 border border-[#EA4335]/30 rounded-full animate-[spin_5s_linear_infinite_reverse]" />
-            <img src="/gdg-logo.png" alt="GDG Logo" fetchPriority="high" className="w-10 h-10 animate-pulse" />
+            <Image src="/gdg-logo.png" alt="GDG Logo" width={40} height={40} className="w-10 h-10 animate-pulse" priority />
           </div>
 
           <div className="text-xs font-mono tracking-[0.8em] text-[#4285F4] uppercase mb-2">GDG_CORE // TELEMETRY LINK</div>
@@ -317,21 +319,17 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
   useEffect(() => {
     fetchTeam();
-    const interval = setInterval(fetchTeam, 3000); // Fast polling for auto-halt
+    const interval = setInterval(fetchTeam, 5000); // Optimized polling interval
     return () => clearInterval(interval);
   }, [teamId]);
 
   async function fetchTeam() {
     try {
-      const [teamRes, sessionRes] = await Promise.all([
-        fetch(`/api/teams/${teamId}`),
-        fetch('/api/game/status', { cache: 'no-store' }),
-      ]);
-      if (!teamRes.ok) return;
-      const { team } = await teamRes.json();
-      const { session } = await sessionRes.json();
-      setTeam(team);
-      setSession(session);
+      const res = await fetch(`/api/teams/${teamId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setTeam(data.team);
+      setSession(data.session);
     } catch { }
   }
 
@@ -349,32 +347,39 @@ export default function TeamClient({ initialTeam, initialSession }) {
   const [analysisRound, setAnalysisRound] = useState(0);
   const [briefingQuestions, setBriefingQuestions] = useState([]);
 
-  useEffect(() => {
-    // Show analysis for the latest completed round
-    const currentRound = session?.currentRound || 1;
-    const roundKey = `round${currentRound}`;
+  const latestAvailableRound = useMemo(() => {
+    const r = session?.currentRound || 1;
+    const roundKey = `round${r}`;
     const answeredCount = team?.answeredQuestions?.[roundKey]?.length || 0;
+    const hasFinishedCurrentRound = (briefingQuestions && briefingQuestions.length > 0) && answeredCount >= briefingQuestions.length;
+    const isRoundEnded = session?.status === `round${r}_ended`;
 
-    // Check if they have completed the current round's questions
-    const hasFinishedCurrentRound = briefingQuestions.length > 0 && answeredCount >= briefingQuestions.length;
+    if (team?.isEliminated || team?.isDisqualified) return r;
+    if (isFinished || hasFinishedCurrentRound || isRoundEnded) return r;
+    if (r > 1) return r - 1;
+    return 0;
+  }, [
+    team?.isEliminated, 
+    team?.isDisqualified,
+    team?.eliminatedAtRound, 
+    team?.answeredQuestions, 
+    session?.currentRound, 
+    session?.status,
+    isFinished, 
+    briefingQuestions?.length
+  ]);
 
-    if (team?.isEliminated) {
-      setAnalysisRound(team.eliminatedAtRound || 1);
-    } else if (isFinished || hasFinishedCurrentRound) {
-      setAnalysisRound(currentRound);
-    } else if (!isActive && currentRound > 1) {
-      setAnalysisRound(currentRound - 1);
-    } else if (isActive && currentRound > 1) {
-      setAnalysisRound(currentRound - 1);
-    } else {
-      setAnalysisRound(0);
+  useEffect(() => {
+    if (latestAvailableRound > 0) {
+      setAnalysisRound(latestAvailableRound);
     }
-  }, [team, session, isActive, isFinished, briefingQuestions.length]);
+  }, [latestAvailableRound]);
 
   const currentRound = session?.currentRound || 1;
   const isPastRound = analysisRound < currentRound;
   const isRoundCompleted = analysisQuestions.length > 0 && (team?.answeredQuestions?.[`round${analysisRound}`]?.length === analysisQuestions.length);
-  const isAnalysisUnlocked = isPastRound || isFinished || isRoundCompleted || team?.isEliminated;
+  const isCurrentRoundEnded = session?.status === `round${analysisRound}_ended`;
+  const isAnalysisUnlocked = isPastRound || isFinished || isRoundCompleted || isCurrentRoundEnded || team?.isEliminated || team?.isDisqualified;
 
   const answeredCountCurrentRound = team?.answeredQuestions?.[`round${currentRound}`]?.length || 0;
   const hasFinishedCurrentRound = briefingQuestions.length > 0 && answeredCountCurrentRound >= briefingQuestions.length;
@@ -383,13 +388,18 @@ export default function TeamClient({ initialTeam, initialSession }) {
   // AND the round is in the past OR the session is finished
   const visibleRounds = [];
   for (let r = 1; r <= 3; r++) {
-    const answeredForRound = team?.answeredQuestions?.[`round${r}`]?.length || 0;
     const roundIsOfficiallyDone =
       session?.status === 'finished' ||
       session?.status === `round${r}_ended` ||
       r < (session?.currentRound || 1) ||
-      team?.isEliminated;
-    if (answeredForRound > 0 && roundIsOfficiallyDone) {
+      team?.isEliminated || 
+      team?.isDisqualified;
+    
+    const answeredForRound = team?.answeredQuestions?.[`round${r}`]?.length || 0;
+    const roundKey = `round${r}`;
+    
+    // Show round if it's officially done OR if the team has finished it early
+    if (roundIsOfficiallyDone || (answeredForRound > 0 && r === (session?.currentRound || 1))) {
       visibleRounds.push(r);
     }
   }
@@ -407,7 +417,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
   async function fetchBriefing(round) {
     try {
-      const res = await fetch(`/api/game/questions?teamId=${teamId}&round=${round}`);
+      const res = await fetch(`/api/game/questions?teamId=${teamId}&round=${round}`, { cache: 'no-store' });
       const data = await res.json();
       setBriefingQuestions(data.questions || []);
     } catch { }
@@ -415,7 +425,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
   async function fetchAnalysis(round) {
     try {
-      const res = await fetch(`/api/game/questions?teamId=${teamId}&round=${round}`);
+      const res = await fetch(`/api/game/questions?teamId=${teamId}&round=${round}`, { cache: 'no-store' });
       const data = await res.json();
       setAnalysisQuestions(data.questions || []);
     } catch { }
@@ -453,7 +463,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
   const roundEnded = session?.status === `round${currentRoundNum}_ended` || session?.status === 'finished';
 
   useEffect(() => {
-    if (!roundEnded) return;
+    if (!roundEnded || team?.isDisqualified || team?.isEliminated) return;
     const key = `r${currentRoundNum}`;
     if (shownRoundsRef.current.has(key)) return;
     // Show with a short delay regardless of rankInfo (we may not have it yet)
@@ -472,6 +482,13 @@ export default function TeamClient({ initialTeam, initialSession }) {
   const isQualified = rankInfo ? rankInfo.rank <= Math.ceil(rankInfo.total * 0.8) : true;
   const showQualificationStatus = roundEnded;
 
+  const isGameFinished = session?.status === 'finished' || session?.status === 'round3_ended';
+  const shouldShowLeaderboard = team?.isDisqualified || team?.isEliminated || isGameFinished || hasFinishedCurrentRound;
+
+  if (shouldShowLeaderboard) {
+    return <LeaderboardPage />;
+  }
+
   return (
     <div className="min-h-screen w-full bg-[#030303] text-white font-sans flex flex-col relative selection:bg-red-600/30 overflow-y-auto">
       <style>{globalStyles}</style>
@@ -483,7 +500,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
       {/* Top Header */}
       <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50 bg-[#030303]/80 backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <img src="/gdg-logo.png" alt="GDG" className="w-12 h-12 object-contain" />
+          <Image src="/gdg-logo.png" alt="GDG" width={48} height={48} className="w-12 h-12 object-contain" />
           <div className="w-1 h-8 bg-red-600/30" />
           <div className="flex flex-col">
             <div className="font-display font-black text-xl tracking-[0.3em] uppercase opacity-90">{team?.teamName}</div>

@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Zap, Cpu, Activity, Clock, Target, AlertTriangle, Lock, Unlock, ArrowRight, CheckCircle2, XCircle, Crosshair, Hexagon, Radar, Pause, Send } from 'lucide-react';
+import { ShieldAlert, Zap, Cpu, Activity, Clock, Target, AlertTriangle, Lock, Unlock, ArrowRight, CheckCircle2, XCircle, Crosshair, Hexagon, Radar, Pause, Send, Code, Terminal, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 // --- Cyberpunk Scramble Text ---
 const ScrambleText = ({ text, duration = 1200, className }) => {
@@ -498,7 +499,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
         </div>
         <div className="flex items-center justify-between px-6 md:px-12 py-5">
            <div className="flex items-center gap-4">
-              <img src="/gdg-logo.png" alt="GDG" className="w-10 h-10 object-contain mr-4 hidden md:block" />
+              <Image src="/gdg-logo.png" alt="GDG" width={40} height={40} className="w-10 h-10 object-contain mr-4 hidden md:block" />
 
               <div className="flex flex-col">
                  <span className="font-mono text-xs text-white/50 tracking-[0.5em] uppercase">Active Operator</span>

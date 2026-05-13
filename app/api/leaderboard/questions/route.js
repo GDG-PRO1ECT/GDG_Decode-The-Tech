@@ -2,18 +2,27 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Question from '@/lib/models/Question';
-import GameSession from '@/lib/models/GameSession';
+import { getGameSession } from '@/lib/sessionCache';
 
 export async function GET() {
   try {
     await dbConnect();
-    const session = await GameSession.findOne({ sessionId: 'main' }).lean();
+    const session = await getGameSession();
 
-    if (!session || (session.status !== 'finished' && session.status !== 'round3_ended')) {
+    if (!session) {
       return NextResponse.json({ questions: [] });
     }
 
-    const questions = await Question.find({ isActive: true })
+    let maxCompletedRound = 0;
+    if (session.status === 'finished' || session.status === 'round3_ended') maxCompletedRound = 3;
+    else if (session.status === 'round2_ended' || session.currentRound === 3) maxCompletedRound = 2;
+    else if (session.status === 'round1_ended' || session.currentRound === 2) maxCompletedRound = 1;
+
+    if (maxCompletedRound === 0) {
+      return NextResponse.json({ questions: [] });
+    }
+
+    const questions = await Question.find({ isActive: true, round: { $lte: maxCompletedRound } })
       .sort({ round: 1, questionNumber: 1 })
       .lean();
 
