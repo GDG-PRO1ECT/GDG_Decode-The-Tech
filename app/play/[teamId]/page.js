@@ -63,6 +63,8 @@ export default async function PlayPage({ params }) {
     players: team.players,
     scores: team.scores,
     isDisqualified: team.isDisqualified,
+    isEliminated: team.isEliminated,
+    eliminatedAtRound: team.eliminatedAtRound,
   };
 
   return (

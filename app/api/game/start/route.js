@@ -40,10 +40,10 @@ export async function POST(req) {
       currentRound: round,
       currentPlayerIndex: round - 1 
     });
-    
+
     await session.save();
     invalidateSessionCache();
-    return NextResponse.json({ session, message: `Round ${round} started` });
+    return NextResponse.json({ session, message: `Round ${round} started for all teams.` });
   }
 
   if (action === 'end_round') {
@@ -52,9 +52,8 @@ export async function POST(req) {
     await session.save();
     invalidateSessionCache();
 
-    // Dual-Threshold Qualification Logic
-    // A team qualifies if they are in the top 80% by rank (score + time tie-breaker)
-    // OR if they achieve at least 80% of the top total score.
+    // Qualification logic disabled as per request: All teams play all rounds.
+    /*
     const allTeams = await Team.find({ isActive: true, isDisqualified: { $ne: true } });
     if (allTeams.length > 0) {
       const roundKey = `round${round}`;
@@ -72,7 +71,7 @@ export async function POST(req) {
         return getRoundCompletionTime(a) - getRoundCompletionTime(b);
       });
 
-      const rankCutoff = Math.ceil(allTeams.length * 0.8);
+      const rankCutoff = Math.max(1, Math.floor(allTeams.length * 0.8));
       const topScore = sortedTeams[0].scores.total;
       const scoreCutoff = topScore * 0.8;
 
@@ -90,8 +89,9 @@ export async function POST(req) {
         }
       }
     }
+    */
 
-    return NextResponse.json({ session, message: `Round ${round} ended. Teams evaluated for qualification.` });
+    return NextResponse.json({ session, message: `Round ${round} ended. All teams remain qualified.` });
   }
 
   if (action === 'pause_round') {

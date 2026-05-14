@@ -479,7 +479,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
   };
 
   // Qualification Calculation: Top 80% of leaderboard
-  const isQualified = rankInfo ? rankInfo.rank <= Math.ceil(rankInfo.total * 0.8) : true;
+  const isQualified = rankInfo ? rankInfo.rank <= Math.max(1, Math.floor(rankInfo.total * 0.8)) : true;
   const showQualificationStatus = roundEnded;
 
   const isGameFinished = session?.status === 'finished' || session?.status === 'round3_ended';

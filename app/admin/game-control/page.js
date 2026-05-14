@@ -17,7 +17,7 @@ export default function GameControlPage() {
   const [session, setSession] = useState(null);
   const [teams, setTeams] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [durations, setDurations] = useState({ 1: 900, 2: 1200, 3: 900 });
+  const [durations, setDurations] = useState({ 1: 1200, 2: 1200, 3: 1500 });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: 'success' });
   const [timeLeft, setTimeLeft] = useState(0);

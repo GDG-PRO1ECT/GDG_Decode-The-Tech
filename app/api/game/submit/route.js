@@ -23,6 +23,11 @@ export async function POST(req) {
   if (!team) return NextResponse.json({ error: 'Team not found' }, { status: 404 });
   if (!question) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
+  // Eligibility check (only disqualified/banned teams are blocked)
+  if (team.isDisqualified) {
+    return NextResponse.json({ error: 'Team is disqualified and cannot play' }, { status: 403 });
+  }
+
   // Check if game round is active
   if (!session || session.status !== `round${round}_active`) {
     return NextResponse.json({ error: 'Round not active' }, { status: 400 });

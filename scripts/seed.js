@@ -58,7 +58,7 @@ const round2Questions = [
   { question: 'Identify the app or platform from this emoji clue', emojiClue: '💬 💜 🔒', options: ['WhatsApp', 'Telegram', 'Signal', 'Viber'], correctAnswer: 'Signal', explanation: 'Signal secure messaging.' },
   { question: 'Identify the app or platform from this emoji clue', emojiClue: '🤖 🟢 🧱', options: ['iOS', 'Android', 'HarmonyOS', 'OxygenOS'], correctAnswer: 'Android', explanation: 'Android mobile OS.' },
   { question: 'Identify the app or platform from this emoji clue', emojiClue: '🔊 ☁️ 📝', options: ['Spotify', 'Apple Music', 'SoundCloud', 'Shazam'], correctAnswer: 'SoundCloud', explanation: 'SoundCloud audio platform.' },
-  { question: 'Identify the app or platform from this emoji clue', emojiClue: '🔋 ⚡ 🇺🇸', options: ['Vinfast', 'BYD', 'Tesla', 'BMW'], correctAnswer: 'Tesla', explanation: 'Tesla electric vehicles.' },
+  { question: 'Identify the app or platform from this emoji clue', emojiClue: '1️⃣ 🔋 ⚡ 🇺🇸', options: ['Vinfast', 'BYD', 'Tesla', 'BMW'], correctAnswer: 'Tesla', explanation: 'Tesla electric vehicles.' },
   { question: 'Identify the app or platform from this emoji clue', emojiClue: '🎮 🌐 💬', options: ['Slack', 'Discord', 'Twitch', 'Skype'], correctAnswer: 'Discord', explanation: 'Discord chat for gamers.' },
   { question: 'Identify the app or platform from this emoji clue', emojiClue: '👽 💬 ⬆️', options: ['Discord', 'Reddit', '4chan', 'Tumblr'], correctAnswer: 'Reddit', explanation: 'Reddit social platform (mascot is Snoo).' },
   { question: 'Identify the app or platform from this emoji clue', emojiClue: '☁️ 📁 🔘🔘🔘', options: ['Google Drive', 'Dropbox', 'OneDrive', 'iCloud'], correctAnswer: 'Google Drive', explanation: 'Google Drive cloud storage.' },

@@ -120,9 +120,9 @@ export async function POST() {
 
     // Insert questions
     const allQuestions = [
-      ...round1Questions.map((q, i) => ({ ...q, round: 1, questionNumber: i + 1, basePoints: 1 })),
-      ...round2Questions.map((q, i) => ({ ...q, round: 2, questionNumber: i + 1, basePoints: 1 })),
-      ...round3Questions.map((q, i) => ({ ...q, round: 3, questionNumber: i + 1, basePoints: 1, emojiClue: q.emojiClue || '' })),
+      ...round1Questions.map((q, i) => ({ ...q, round: 1, questionNumber: i + 1, basePoints: 1, isActive: true })),
+      ...round2Questions.map((q, i) => ({ ...q, round: 2, questionNumber: i + 1, basePoints: 1, isActive: true })),
+      ...round3Questions.map((q, i) => ({ ...q, round: 3, questionNumber: i + 1, basePoints: 1, emojiClue: q.emojiClue || '', isActive: true })),
     ];
 
     await mongoose.connection.collection('questions').insertMany(allQuestions);
@@ -132,7 +132,7 @@ export async function POST() {
       sessionId: 'main',
       status: 'waiting',
       currentRound: 0,
-      roundDurations: { round1: 900, round2: 1200, round3: 900 },
+      roundDurations: { round1: 1200, round2: 1200, round3: 1500 },
       fastestAnswers: { round1: [], round2: [], round3: [] },
       settings: { fastestFingerBonus: 5, timeBonusEnabled: true, shuffleQuestions: true },
       createdAt: new Date(),

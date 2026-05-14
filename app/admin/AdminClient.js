@@ -24,7 +24,7 @@ export default function AdminDashboard({ initialSession = null, initialTeams = [
   const [session, setSession] = useState(initialSession);
   const [teams, setTeams] = useState(initialTeams);
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
-  const [durations, setDurations] = useState({ 1: 900, 2: 1200, 3: 900 }); // in seconds
+  const [durations, setDurations] = useState({ 1: 1200, 2: 1200, 3: 1500 }); // in seconds
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: 'success' });
   const [timeLeft, setTimeLeft] = useState(0);

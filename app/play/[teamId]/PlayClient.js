@@ -400,7 +400,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
 
   // Remove early return for disqualified teams - they can now play but with a warning banner
 
-  if (team?.isEliminated || isDisqualifiedLocal || team?.isDisqualified) {
+  if (isDisqualifiedLocal || team?.isDisqualified) {
     const isDQ = isDisqualifiedLocal || team?.isDisqualified;
     return (
       <div className="min-h-screen relative flex flex-col items-center justify-center bg-[#020205] overflow-hidden select-none font-body">
