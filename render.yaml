@@ -10,10 +10,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        placeholder: "Your MongoDB Connection String"
+        sync: false
       - key: ADMIN_PASSWORD
-        placeholder: "Your Admin Password"
+        sync: false
       - key: JWT_SECRET
-        placeholder: "Your JWT Secret"
+        generateValue: true
       - key: NEXT_PUBLIC_BACKEND_URL
         fromContext: instanceUrl
