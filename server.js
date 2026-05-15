@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const next = require('next');
 const { Server } = require('socket.io');
+const parser = require('socket.io-msgpack-parser');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -32,6 +33,7 @@ app.prepare().then(() => {
   const io = new Server(httpServer, {
     path: '/api/socket_io',
     addTrailingSlash: false,
+    parser,
     cors: {
       origin: "*",
       methods: ["GET", "POST"]
