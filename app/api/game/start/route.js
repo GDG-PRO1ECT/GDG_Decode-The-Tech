@@ -131,22 +131,17 @@ export async function POST(req) {
     session.currentRound = 0;
     session.roundStartTime = null;
     session.roundEndTime = null;
+    session.isPaused = false;
+    session.pausedAt = null;
+    session.timeRemainingAtPause = null;
     session.fastestAnswers = { round1: [], round2: [], round3: [] };
     await session.save();
     invalidateSessionCache();
     
-    // Reset all teams
-    await Team.updateMany({}, {
-      currentRound: 0,
-      currentPlayerIndex: 0,
-      scores: { round1: 0, round2: 0, round3: 0, total: 0, bonusPoints: 0 },
-      answeredQuestions: { round1: [], round2: [], round3: [] },
-      isEliminated: false,
-      eliminatedAtRound: null,
-      questionOrder: { round1: [], round2: [], round3: [] },
-    });
+    // Purge all teams
+    await Team.deleteMany({});
     
-    return NextResponse.json({ message: 'Game reset' });
+    return NextResponse.json({ message: 'System purged successfully' });
   }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

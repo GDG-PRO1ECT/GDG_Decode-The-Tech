@@ -17,6 +17,8 @@ export default function AdminTeamsPage() {
   const [bulkText, setBulkText] = useState('');
   const [showBulk, setShowBulk] = useState(false);
   const [showManual, setShowManual] = useState(false);
+  const [editingScore, setEditingScore] = useState(null);
+  const [scoreForm, setScoreForm] = useState({ round1: 0, round2: 0, round3: 0, bonusPoints: 0 });
 
   useEffect(() => { fetchTeams(); }, []);
 
@@ -122,6 +124,27 @@ export default function AdminTeamsPage() {
     } catch {
       showMsg('Network error during import', 'error');
     }
+  }
+
+  async function updateScore(e) {
+    e.preventDefault();
+    setAdding(true);
+    const adminPass = sessionStorage.getItem('admin_pass') || '';
+    try {
+      const res = await fetch(`/api/teams/${editingScore.teamId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPass },
+        body: JSON.stringify({ scores: scoreForm }),
+      });
+      if (res.ok) {
+        showMsg(`Scores for ${editingScore.teamName} updated`);
+        setEditingScore(null);
+        fetchTeams();
+      } else {
+        showMsg('Error updating scores', 'error');
+      }
+    } catch { showMsg('Network error', 'error'); }
+    setAdding(false);
   }
 
   return (
@@ -293,6 +316,9 @@ export default function AdminTeamsPage() {
                     <a href={`/team/${team.teamId}`} target="_blank" className="btn-premium bg-white/5 border-white/10 px-4 py-3 text-[10px] flex-1 sm:flex-none text-center">
                       VIEW
                     </a>
+                    <button onClick={() => { setEditingScore(team); setScoreForm(team.scores); }} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-blue/50 hover:bg-gdg-blue/10 hover:text-gdg-blue text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
+                      EDIT_SCORE
+                    </button>
                     {team.isDisqualified ? (
                       <button onClick={() => setDisqualification(team.teamId, false)} className="btn-premium btn-gdg-green px-4 py-3 text-[10px] flex-1 sm:flex-none">
                         REINSTATE
@@ -311,6 +337,61 @@ export default function AdminTeamsPage() {
             </div>
           )}
         </div>
+
+        {/* Score Update Modal */}
+        <AnimatePresence>
+          {editingScore && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-dark-950/80 backdrop-blur-md">
+              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="w-full max-w-xl glass-panel p-8 rounded-[2.5rem] border border-gdg-blue/30 shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gdg-blue/5 rounded-full blur-[80px] pointer-events-none" />
+                <div className="font-display font-bold text-white text-xl mb-6 tracking-widest flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gdg-blue/10 flex items-center justify-center text-gdg-blue border border-gdg-blue/20">⚖️</div>
+                    ADJUST SCORES
+                  </div>
+                  <button onClick={() => setEditingScore(null)} className="text-gray-500 hover:text-white transition-colors">✕</button>
+                </div>
+                
+                <div className="mb-8">
+                  <div className="font-display font-black text-white text-2xl tracking-widest mb-1">{editingScore.teamName}</div>
+                  <div className="font-mono text-[10px] text-gray-500 tracking-[0.3em] uppercase">NODE_ID: {editingScore.teamId}</div>
+                </div>
+
+                <form onSubmit={updateScore} className="space-y-6 relative z-10">
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { label: 'PHASE 01', key: 'round1', color: 'text-gdg-blue' },
+                      { label: 'PHASE 02', key: 'round2', color: 'text-gdg-yellow' },
+                      { label: 'PHASE 03', key: 'round3', color: 'text-gdg-red' },
+                      { label: 'BONUS_CYC', key: 'bonusPoints', color: 'text-gdg-green' },
+                    ].map((f) => (
+                      <div key={f.key}>
+                        <label className={`font-mono text-[10px] ${f.color} tracking-widest block mb-2 uppercase ml-2`}>{f.label}</label>
+                        <input type="number" value={scoreForm[f.key]} onChange={e => setScoreForm({...scoreForm, [f.key]: parseInt(e.target.value) || 0})}
+                          className="w-full bg-dark-950/80 border border-white/10 rounded-2xl text-white font-mono text-lg px-5 py-4 focus:outline-none focus:border-gdg-blue transition-all text-center" />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-6 border-t border-white/5 mt-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-center bg-dark-950/50 p-4 rounded-2xl border border-white/5 mb-2">
+                       <span className="font-mono text-[10px] text-gray-500 tracking-widest uppercase">PROTOTYPE TOTAL</span>
+                       <span className="font-display font-black text-3xl text-white">
+                         {(scoreForm.round1 || 0) + (scoreForm.round2 || 0) + (scoreForm.round3 || 0) + (scoreForm.bonusPoints || 0)}
+                       </span>
+                    </div>
+                    <button type="submit" disabled={adding} className="btn-premium btn-gdg-blue w-full py-5 text-sm disabled:opacity-50 shadow-[0_10px_30px_rgba(66,133,244,0.3)]">
+                      {adding ? 'UPLOADING...' : 'COMMIT CHANGES'}
+                    </button>
+                    <button type="button" onClick={() => setEditingScore(null)} className="w-full py-4 text-gray-500 font-mono text-[10px] tracking-widest hover:text-white transition-colors uppercase">
+                      CANCEL_X
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

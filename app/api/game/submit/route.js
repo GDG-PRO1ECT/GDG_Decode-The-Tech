@@ -91,7 +91,7 @@ export async function POST(req) {
 
   // Update scores
   team.scores[roundKey] = (team.scores[roundKey] || 0) + points;
-  team.scores.total = (team.scores.round1 || 0) + (team.scores.round2 || 0) + (team.scores.round3 || 0);
+  team.scores.total = (team.scores.round1 || 0) + (team.scores.round2 || 0) + (team.scores.round3 || 0) + (team.scores.bonusPoints || 0);
   
   await team.save();
 
