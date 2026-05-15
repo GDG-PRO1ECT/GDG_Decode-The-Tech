@@ -18,6 +18,7 @@ export async function GET() {
   // Pre-calculate sorting keys for performance
   const roundKey = `round${session?.currentRound || 1}`;
   const teamsWithStats = teams.map(team => {
+    team.scores.total = (team.scores.round1 || 0) + (team.scores.round2 || 0) + (team.scores.round3 || 0);
     const answers = team.answeredQuestions?.[roundKey] || [];
     let lastTime = Infinity;
     if (answers.length > 0) {
