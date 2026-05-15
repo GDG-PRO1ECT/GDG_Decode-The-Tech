@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Network, Database, MonitorPlay, BarChart3, Zap, Skull, Power, Play, Pause, Square, AlertTriangle, ShieldAlert, Cpu, Clock, Activity, RefreshCw } from 'lucide-react';
+import { getSocket } from '@/lib/socket';
 
 const STATUS_MAP = {
   waiting: { label: 'AWAITING INIT', color: 'text-gray-500', dot: 'bg-gray-500', glow: 'shadow-[0_0_15px_#6b7280]', hex: '#6b7280' },
@@ -32,9 +33,35 @@ export default function AdminDashboard({ initialSession = null, initialTeams = [
   const [showDanger, setShowDanger] = useState(false);
 
   useEffect(() => {
-    const poll = setInterval(fetchAll, 5000);
-    return () => clearInterval(poll);
-  }, []);
+    fetchAll();
+    
+    const socket = getSocket();
+    socket.emit('join_display');
+
+    const onSessionUpdate = (newSession) => setSession(newSession);
+    const onLeaderboardUpdate = (newLeaderboard) => setLeaderboard(newLeaderboard);
+
+    socket.on('session_update', onSessionUpdate);
+    socket.on('leaderboard_update', onLeaderboardUpdate);
+
+    // Dynamic polling based on game state
+    const pollInterval = isLive ? 15000 : 30000;
+    const poll = setInterval(() => {
+      if (!document.hidden) fetchAll();
+    }, pollInterval);
+
+    const handleVisibility = () => {
+      if (!document.hidden) fetchAll();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      socket.off('session_update', onSessionUpdate);
+      socket.off('leaderboard_update', onLeaderboardUpdate);
+      clearInterval(poll);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [isLive]);
 
   useEffect(() => {
     clearInterval(timerRef.current);
@@ -52,6 +79,7 @@ export default function AdminDashboard({ initialSession = null, initialTeams = [
   }, [session?.roundEndTime, session?.isPaused, session?.timeRemainingAtPause]);
 
   async function fetchAll() {
+    if (document.hidden) return;
     try {
       const [sRes, tRes, lRes] = await Promise.all([
         fetch('/api/game/status'), fetch('/api/teams'), fetch('/api/leaderboard'),

@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Zap, Cpu, Activity, Clock, Target, AlertTriangle, Lock, Unlock, ArrowRight, CheckCircle2, XCircle, Crosshair, Hexagon, Radar, Pause, Send, Code, Terminal, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import { getSocket } from '@/lib/socket';
 
 // --- Cyberpunk Scramble Text ---
 const ScrambleText = ({ text, duration = 1200, className }) => {
@@ -259,8 +260,32 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchSessionOnly, 10000);
-    return () => clearInterval(interval);
+    
+    const socket = getSocket();
+    socket.emit('join_team', teamId);
+
+    const onSessionUpdate = (newSession) => setSession(newSession);
+    const onLeaderboardUpdate = (newLeaderboard) => setLeaderboard(newLeaderboard);
+
+    socket.on('session_update', onSessionUpdate);
+    socket.on('leaderboard_update', onLeaderboardUpdate);
+
+    // Fallback polling (much slower)
+    const interval = setInterval(() => {
+      if (!document.hidden) fetchData();
+    }, 60000);
+
+    const handleVisibility = () => {
+      if (!document.hidden) fetchData();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      socket.off('session_update', onSessionUpdate);
+      socket.off('leaderboard_update', onLeaderboardUpdate);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [teamId]);
 
   useEffect(() => {
@@ -320,26 +345,35 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
       
       setAllAnswered(data.questions?.length > 0 && data.questions?.every(q => q.isAnswered));
 
-      const lbRes = await fetch('/api/leaderboard');
+      const lbRes = await fetch(`/api/leaderboard?limit=10&teamId=${teamId}`);
       if (lbRes.ok) {
         const lbData = await lbRes.json();
-        setLeaderboard(lbData.leaderboard || []);
+        let finalLb = lbData.leaderboard || [];
+        if (lbData.targetTeam && !finalLb.some(t => t.teamId === teamId)) {
+          finalLb.push(lbData.targetTeam);
+        }
+        setLeaderboard(finalLb);
       }
     } catch {}
   }
 
   async function fetchSessionOnly() {
+    if (document.hidden) return;
     try {
       const [sessionRes, lbRes] = await Promise.all([
         fetch('/api/game/status'),
-        fetch('/api/leaderboard')
+        fetch(`/api/leaderboard?limit=10&teamId=${teamId}`)
       ]);
       const { session } = await sessionRes.json();
       setSession(session);
       
       if (lbRes.ok) {
-        const { leaderboard } = await lbRes.json();
-        setLeaderboard(leaderboard || []);
+        const lbData = await lbRes.json();
+        let finalLb = lbData.leaderboard || [];
+        if (lbData.targetTeam && !finalLb.some(t => t.teamId === teamId)) {
+          finalLb.push(lbData.targetTeam);
+        }
+        setLeaderboard(finalLb);
       }
     } catch {}
   }

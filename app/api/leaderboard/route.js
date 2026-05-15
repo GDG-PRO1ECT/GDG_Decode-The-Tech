@@ -3,9 +3,25 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Team from '@/lib/models/Team';
 import GameSession from '@/lib/models/GameSession';
-import { getGameSession } from '@/lib/sessionCache';
+import { getGameSession, invalidateSessionCache } from '@/lib/sessionCache';
 
-export async function GET() {
+let cachedLeaderboardResult = null;
+let lastLeaderboardCalc = 0;
+const LEADERBOARD_CACHE_TTL = 3000; // 3 seconds
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const limit = parseInt(searchParams.get('limit')) || 0;
+  const targetTeamId = searchParams.get('teamId');
+
+  const now = Date.now();
+  if (cachedLeaderboardResult && (now - lastLeaderboardCalc < LEADERBOARD_CACHE_TTL) && !limit && !targetTeamId) {
+    return NextResponse.json(
+      cachedLeaderboardResult,
+      { headers: { 'Cache-Control': 's-maxage=10, stale-while-revalidate=30' } }
+    );
+  }
+
   await dbConnect();
   
   const [teams, session] = await Promise.all([
@@ -64,11 +80,36 @@ export async function GET() {
     };
   });
 
+  // Calculate stats for target team if outside limit
+  let targetTeamData = null;
+  if (targetTeamId) {
+    targetTeamData = leaderboard.find(t => t.teamId === targetTeamId);
+  }
+
+  // Truncate if limit is set
+  let finalLeaderboard = leaderboard;
+  if (limit > 0) {
+    finalLeaderboard = leaderboard.slice(0, limit);
+  }
+
+  const responseData = { 
+    leaderboard: finalLeaderboard, 
+    session,
+    targetTeam: targetTeamData,
+    totalTeams: leaderboard.length 
+  };
+
+  // Cache the full leaderboard if no specific filters were applied
+  if (!limit && !targetTeamId) {
+    cachedLeaderboardResult = responseData;
+    lastLeaderboardCalc = now;
+  }
+
   return NextResponse.json(
-    { leaderboard, session },
+    responseData,
     {
       headers: {
-        'Cache-Control': 's-maxage=3, stale-while-revalidate=5',
+        'Cache-Control': 's-maxage=10, stale-while-revalidate=30',
       },
     }
   );

@@ -60,13 +60,13 @@ export async function POST(req) {
       // Create a map for quick lookup
       const correctMap = new Map();
       question.matchPairs.forEach(p => correctMap.set(p.left, p.right));
-      
+
       isCorrect = answer.every(pair => correctMap.get(pair.left) === pair.right);
     }
   } else {
     isCorrect = answer === question.correctAnswer;
   }
-  
+
   const timeTaken = Math.max(0, (now - session.roundStartTime) / 1000);
 
   // Calculate points
@@ -81,7 +81,7 @@ export async function POST(req) {
   // Save the answer
   if (!team.answeredQuestions) team.answeredQuestions = {};
   if (!team.answeredQuestions[roundKey]) team.answeredQuestions[roundKey] = [];
-  
+
   team.answeredQuestions[roundKey].push({
     questionId: String(questionId),
     answeredAt: now,
@@ -92,8 +92,13 @@ export async function POST(req) {
   // Update scores
   team.scores[roundKey] = (team.scores[roundKey] || 0) + points;
   team.scores.total = (team.scores.round1 || 0) + (team.scores.round2 || 0) + (team.scores.round3 || 0) + (team.scores.bonusPoints || 0);
-  
+
   await team.save();
+
+  if (global.io) {
+    global.io.emit('leaderboard-update');
+    global.io.to(`team-${teamId}`).emit('team-update', { teamId });
+  }
 
   return NextResponse.json({
     correct: isCorrect,

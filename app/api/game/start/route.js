@@ -43,6 +43,10 @@ export async function POST(req) {
 
     await session.save();
     invalidateSessionCache();
+
+    const { broadcastUpdate } = require('@/lib/broadcast');
+    broadcastUpdate();
+
     return NextResponse.json({ session, message: `Round ${round} started for all teams.` });
   }
 
@@ -91,6 +95,9 @@ export async function POST(req) {
     }
     */
 
+    const { broadcastUpdate } = require('@/lib/broadcast');
+    broadcastUpdate();
+
     return NextResponse.json({ session, message: `Round ${round} ended. All teams remain qualified.` });
   }
 
@@ -105,6 +112,10 @@ export async function POST(req) {
     // Actually, setting roundEndTime to null might break things, we just rely on isPaused.
     await session.save();
     invalidateSessionCache();
+
+    const { broadcastUpdate } = require('@/lib/broadcast');
+    broadcastUpdate();
+
     return NextResponse.json({ session, message: `Round ${round} paused` });
   }
 
@@ -116,6 +127,10 @@ export async function POST(req) {
     session.roundEndTime = new Date(now.getTime() + (session.timeRemainingAtPause || 0));
     await session.save();
     invalidateSessionCache();
+
+    const { broadcastUpdate } = require('@/lib/broadcast');
+    broadcastUpdate();
+
     return NextResponse.json({ session, message: `Round ${round} resumed` });
   }
 
@@ -123,6 +138,10 @@ export async function POST(req) {
     session.status = 'finished';
     await session.save();
     invalidateSessionCache();
+
+    const { broadcastUpdate } = require('@/lib/broadcast');
+    broadcastUpdate();
+
     return NextResponse.json({ session, message: 'Game finished' });
   }
 
@@ -141,6 +160,9 @@ export async function POST(req) {
     // Purge all teams
     await Team.deleteMany({});
     
+    const { broadcastUpdate } = require('@/lib/broadcast');
+    broadcastUpdate();
+
     return NextResponse.json({ message: 'System purged successfully' });
   }
 

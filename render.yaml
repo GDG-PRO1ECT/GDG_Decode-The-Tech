@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: decode-the-tech-backend
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:backend
+    healthCheckPath: /api/game/status
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        placeholder: "Your MongoDB Connection String"
+      - key: ADMIN_PASSWORD
+        placeholder: "Your Admin Password"
+      - key: JWT_SECRET
+        placeholder: "Your JWT Secret"
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromContext: instanceUrl

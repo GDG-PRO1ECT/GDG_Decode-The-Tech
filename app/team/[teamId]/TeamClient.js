@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShieldAlert, Send, Lock, Cpu, Flag, Zap, Gauge, Timer } from 'lucide-react';
+import { getSocket } from '@/lib/socket';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useAnimationFrame } from 'framer-motion';
 import LeaderboardPage from '@/app/leaderboard/page';
 
@@ -319,11 +320,36 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
   useEffect(() => {
     fetchTeam();
-    const interval = setInterval(fetchTeam, 5000); // Optimized polling interval
-    return () => clearInterval(interval);
+
+    const socket = getSocket();
+    socket.emit('join_team', teamId);
+
+    const onSessionUpdate = (newSession) => setSession(newSession);
+    const onLeaderboardUpdate = (newLeaderboard) => setLeaderboardData(newLeaderboard);
+
+    socket.on('session_update', onSessionUpdate);
+    socket.on('leaderboard_update', onLeaderboardUpdate);
+
+    // Fallback polling (much slower)
+    const interval = setInterval(() => {
+      if (!document.hidden) fetchTeam();
+    }, 60000);
+
+    const handleVisibility = () => {
+      if (!document.hidden) fetchTeam();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      socket.off('session_update', onSessionUpdate);
+      socket.off('leaderboard_update', onLeaderboardUpdate);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [teamId]);
 
   async function fetchTeam() {
+    if (document.hidden) return;
     try {
       const res = await fetch(`/api/teams/${teamId}`);
       if (!res.ok) return;
@@ -438,16 +464,22 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
   useEffect(() => {
     async function fetchLeaderboard() {
+      if (document.hidden) return;
       try {
-        const res = await fetch('/api/leaderboard');
-        const data = await res.json();
-        setLeaderboardData(data.leaderboard || []);
+        const res = await fetch(`/api/leaderboard?limit=10&teamId=${teamId}`);
+        const lbData = await res.json();
+        
+        let finalLb = lbData.leaderboard || [];
+        if (lbData.targetTeam && !finalLb.some(t => t.teamId === teamId)) {
+          finalLb.push(lbData.targetTeam);
+        }
+        setLeaderboardData(finalLb);
 
-        const myRank = data.leaderboard.find(t => t.teamId === teamId);
+        const myRank = lbData.targetTeam;
         if (myRank) {
           setRankInfo({
             rank: myRank.rank,
-            total: data.leaderboard.length
+            total: lbData.totalTeams || finalLb.length
           });
         }
       } catch { }

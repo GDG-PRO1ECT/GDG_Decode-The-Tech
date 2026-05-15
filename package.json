@@ -7,12 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "start:backend": "node server.js",
+    "dev:backend": "node server.js"
   },
   "dependencies": {
     "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
     "framer-motion": "^11.2.10",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.383.0",

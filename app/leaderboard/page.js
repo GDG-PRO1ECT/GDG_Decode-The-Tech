@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getSocket } from '@/lib/socket';
 
 const GdgLogo = ({ className = "w-6 h-6" }) => (
   <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain`} />
@@ -16,13 +17,38 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 5000);
-    return () => clearInterval(interval);
+    
+    const socket = getSocket();
+    socket.emit('join_display');
+
+    const onSessionUpdate = (newSession) => setSession(newSession);
+    const onLeaderboardUpdate = (newLeaderboard) => setLeaderboard(newLeaderboard);
+
+    socket.on('session_update', onSessionUpdate);
+    socket.on('leaderboard_update', onLeaderboardUpdate);
+
+    // Fallback polling (very slow for public watchers)
+    const interval = setInterval(() => {
+      if (!document.hidden) fetchLeaderboard();
+    }, 120000);
+
+    const handleVisibility = () => {
+      if (!document.hidden) fetchLeaderboard();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      socket.off('session_update', onSessionUpdate);
+      socket.off('leaderboard_update', onLeaderboardUpdate);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   async function fetchLeaderboard() {
+    if (document.hidden) return;
     try {
-      const res = await fetch('/api/leaderboard');
+      const res = await fetch('/api/leaderboard?limit=20');
       const data = await res.json();
       setLeaderboard(data.leaderboard || []);
       setSession(data.session);
