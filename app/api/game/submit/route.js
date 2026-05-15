@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import Team from '@/lib/models/Team';
 import Question from '@/lib/models/Question';
 import GameSession from '@/lib/models/GameSession';
+import { broadcastUpdate } from '@/lib/broadcast';
 
 export async function POST(req) {
   await dbConnect();

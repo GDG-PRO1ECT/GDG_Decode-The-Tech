@@ -5,6 +5,7 @@ import GameSession from '@/lib/models/GameSession';
 import Team from '@/lib/models/Team';
 import Question from '@/lib/models/Question';
 import { invalidateSessionCache } from '@/lib/sessionCache';
+import { broadcastUpdate } from '@/lib/broadcast';
 
 export async function POST(req) {
   await dbConnect();
@@ -44,7 +45,6 @@ export async function POST(req) {
     await session.save();
     invalidateSessionCache();
 
-    const { broadcastUpdate } = require('@/lib/broadcast');
     broadcastUpdate();
 
     return NextResponse.json({ session, message: `Round ${round} started for all teams.` });
@@ -95,7 +95,6 @@ export async function POST(req) {
     }
     */
 
-    const { broadcastUpdate } = require('@/lib/broadcast');
     broadcastUpdate();
 
     return NextResponse.json({ session, message: `Round ${round} ended. All teams remain qualified.` });
@@ -113,7 +112,6 @@ export async function POST(req) {
     await session.save();
     invalidateSessionCache();
 
-    const { broadcastUpdate } = require('@/lib/broadcast');
     broadcastUpdate();
 
     return NextResponse.json({ session, message: `Round ${round} paused` });
@@ -128,7 +126,6 @@ export async function POST(req) {
     await session.save();
     invalidateSessionCache();
 
-    const { broadcastUpdate } = require('@/lib/broadcast');
     broadcastUpdate();
 
     return NextResponse.json({ session, message: `Round ${round} resumed` });
@@ -139,7 +136,6 @@ export async function POST(req) {
     await session.save();
     invalidateSessionCache();
 
-    const { broadcastUpdate } = require('@/lib/broadcast');
     broadcastUpdate();
 
     return NextResponse.json({ session, message: 'Game finished' });
@@ -160,7 +156,6 @@ export async function POST(req) {
     // Purge all teams
     await Team.deleteMany({});
     
-    const { broadcastUpdate } = require('@/lib/broadcast');
     broadcastUpdate();
 
     return NextResponse.json({ message: 'System purged successfully' });

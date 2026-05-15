@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { getSocket } from '@/lib/socket';
 
 const TICK_INTERVAL = 3000;
 
@@ -38,9 +39,25 @@ export default function DisplayPage() {
   const modeRef = useRef(null);
 
   useEffect(() => {
+    // Initial fallback fetch
     loadData();
-    const poll = setInterval(loadData, TICK_INTERVAL);
-    return () => clearInterval(poll);
+
+    const socket = getSocket();
+    
+    socket.on('connect', () => {
+      socket.emit('join_display');
+    });
+
+    const onSessionUpdate = (newSession) => setSession(newSession);
+    const onLeaderboardUpdate = (newLeaderboard) => setLeaderboard(newLeaderboard);
+
+    socket.on('session_update', onSessionUpdate);
+    socket.on('leaderboard_update', onLeaderboardUpdate);
+
+    return () => {
+      socket.off('session_update', onSessionUpdate);
+      socket.off('leaderboard_update', onLeaderboardUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -306,7 +323,7 @@ export default function DisplayPage() {
       {/* Bottom bar */}
       <div className="border-t border-white/5 px-8 py-3 flex items-center justify-between">
         <div className="font-mono text-xs text-white/20">
-          Auto-refreshes every {TICK_INTERVAL / 1000}s · Last update: {new Date().toLocaleTimeString()}
+          Sync active via WebSockets · Last update: {new Date().toLocaleTimeString()}
         </div>
         <div className="flex items-center gap-6">
           <span className="font-mono text-xs text-white/20">LEADERBOARD · TOP 3 · STATS</span>
