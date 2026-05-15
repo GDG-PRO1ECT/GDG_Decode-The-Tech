@@ -1,19 +1,17 @@
+
 services:
-  - type: web
-    name: decode-the-tech-backend
+- type: web
+  name: decode-the-tech-backend
     env: node
-    plan: starter
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:backend
-    healthCheckPath: /api/game/status
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: MONGODB_URI
-        sync: false
-      - key: ADMIN_PASSWORD
-        sync: false
-      - key: JWT_SECRET
-        generateValue: true
-      - key: NEXT_PUBLIC_BACKEND_URL
-        fromContext: instanceUrl
+      plan: starter
+        buildCommand: npm install && npm run build
+          startCommand: npm run start:backend
+            healthCheckPath: /api/game/status
+              envVars:
+                - key: NODE_ENV
+                    value: production
+                      - key: MONGODB_URI
+                        - key: ADMIN_PASSWORD
+                          - key: JWT_SECRET
+
+                          
