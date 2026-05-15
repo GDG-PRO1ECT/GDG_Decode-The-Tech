@@ -194,7 +194,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
     }
     return 0;
   });
-  const [totalTime, setTotalTime] = useState(initialSession?.roundDurations?.[`round${initialSession?.currentRound || 1}`] || 900);
+  const [totalTime, setTotalTime] = useState(initialSession?.roundDurations?.[`round${initialSession?.currentRound || 1}`] || (initialSession?.currentRound === 3 ? 1500 : 1200));
   const [isDisqualifiedLocal, setIsDisqualifiedLocal] = useState(initialTeam?.isDisqualified || false);
   const timerRef = useRef(null);
   const hasStartedRef = useRef(true);
@@ -307,7 +307,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
       setSession(session);
 
       const round = session?.currentRound || 1;
-      const dur = session?.roundDurations?.[`round${round}`] || 900;
+      const dur = session?.roundDurations?.[`round${round}`] || (round === 3 ? 1500 : 1200);
       setTotalTime(dur);
 
       const qRes = await fetch(`/api/game/questions?teamId=${teamId}&round=${round}`);

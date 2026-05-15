@@ -723,7 +723,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
                     <Timer size={14} className="text-gray-500" /> Time Limit
                   </span>
                   <span className="font-display font-black italic text-2xl text-white">
-                    {Math.floor((session?.roundDurations?.[`round${session?.currentRound || 1}`] || 900) / 60)} MIN
+                    {Math.floor((session?.roundDurations?.[`round${session?.currentRound || 1}`] || (session?.currentRound === 3 ? 1500 : 1200)) / 60)} MIN
                   </span>
                 </div>
               </div>

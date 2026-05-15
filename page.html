@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/_next/static/css/app/layout.css?v=1778701232380"
+        data-precedence="next_static/css/app/layout.css" />
+    <link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack.js?v=1778701232380" />
+    <script src="/_next/static/chunks/main-app.js?v=1778701232380" async=""></script>
+    <script src="/_next/static/chunks/app-pages-internals.js" async=""></script>
+    <script src="/_next/static/chunks/app/page.js" async=""></script>
+    <script src="/_next/static/chunks/app/not-found.js" async=""></script>
+    <script src="/_next/static/chunks/app/layout.js" async=""></script>
+    <title>Decode The Tech — Global Tech Quiz</title>
+    <meta name="description"
+        content="Crack the code behind everyday technology. The ultimate high-stakes tech quiz experience by Google Developer Groups." />
+    <meta name="author" content="GDG" />
+    <meta name="keywords" content="GDG,Tech Quiz,Decode The Tech,Hackathon,Coding" />
+    <meta property="og:title" content="Decode The Tech" />
+    <meta property="og:description" content="The ultimate high-stakes tech quiz experience." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Decode The Tech" />
+    <meta name="twitter:description" content="The ultimate high-stakes tech quiz experience." />
+    <script src="/_next/static/chunks/polyfills.js" noModule=""></script>
+</head>
+
+<body class="__variable_0a891c __variable_6184ad __variable_bb2e19 font-body bg-dark-900 text-white antialiased">
+    <div
+        class="min-h-screen relative overflow-hidden bg-dark-950 text-gray-200 font-body flex flex-col selection:bg-gdg-blue/30 selection:text-white">
+        <div
+            class="absolute inset-0 bg-[url(&#x27;/images/stardust.png&#x27;)] opacity-[0.03] pointer-events-none mix-blend-screen z-0">
+        </div>
+        <div class="cyber-grid absolute inset-0 pointer-events-none z-0"></div>
+        <div class="gdg-side-hud"></div>
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-[2px] bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.1)] z-0 rotate-12">
+        </div>
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[2px] h-full bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.1)] z-0 rotate-12">
+        </div>
+        <div class="ambient-orb orb-blue z-0"></div>
+        <div class="ambient-orb orb-red z-0"></div>
+        <header class="relative z-50 w-full" style="opacity:0;transform:translateY(-50px)">
+            <div
+                class="clip-angled-br bg-dark-900/90 backdrop-blur-md border-b border-r border-white/10 p-6 md:px-12 flex justify-between items-center max-w-5xl mx-auto mt-0 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                <div class="flex items-center gap-4"><img alt="GDG Logo" loading="lazy" width="100" height="100"
+                        decoding="async" data-nimg="1"
+                        class="w-12 h-12 animate-holo-flicker drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] object-contain"
+                        style="color:transparent"
+                        srcSet="/_next/image?url=%2Fgdg-logo.png&amp;w=128&amp;q=75 1x, /_next/image?url=%2Fgdg-logo.png&amp;w=256&amp;q=75 2x"
+                        src="/_next/image?url=%2Fgdg-logo.png&amp;w=256&amp;q=75" />
+                    <div class="flex flex-col"><span
+                            class="font-display font-black tracking-[0.3em] text-white text-base leading-tight">GDG_CORE</span><span
+                            class="font-mono text-xs text-gdg-blue tracking-[0.4em] uppercase">Decode The Tech //
+                            2026</span></div>
+                </div>
+                <div class="flex gap-4"><a
+                        class="font-display font-bold text-xs tracking-widest uppercase text-gray-400 hover:text-white transition-all flex items-center gap-2 group"
+                        href="/leaderboard"><span
+                            class="w-2 h-2 bg-gdg-blue rounded-full group-hover:shadow-[0_0_10px_#4285F4]"></span>
+                        TELEMETRY</a><a
+                        class="font-display font-bold text-xs tracking-widest uppercase text-gray-400 hover:text-white transition-all flex items-center gap-2 group"
+                        href="/admin"><span
+                            class="w-2 h-2 bg-gdg-red rounded-full group-hover:shadow-[0_0_10px_#EA4335]"></span>
+                        SUDO</a></div>
+            </div>
+        </header>
+        <div
+            class="flex-1 flex flex-col lg:flex-row items-center justify-center max-w-[1500px] w-full mx-auto px-6 md:px-12 mt-10 z-10 gap-16 lg:gap-20">
+            <div class="flex-1 flex flex-col items-start text-left relative z-20" style="opacity:0">
+                <div class="inline-flex items-center gap-3 px-4 py-1.5 border-l-2 border-gdg-green bg-gradient-to-r from-gdg-green/10 to-transparent mb-8"
+                    style="opacity:0;transform:translateX(-50px) skewX(10deg)"><span
+                        class="font-mono text-xs tracking-[0.4em] text-gdg-green uppercase font-bold animate-holo-flicker">SYS_ONLINE</span>
+                </div>
+                <h1 class="font-display font-black leading-[0.85] relative z-10 uppercase flex flex-col items-start mb-6 drop-shadow-2xl"
+                    style="opacity:0;transform:translateX(-50px) skewX(10deg)">
+                    <div class="text-[5rem] md:text-[7rem] lg:text-[8rem] text-white tracking-tighter"
+                        style="opacity:0;transform:translateY(20px)">DECODE</div>
+                    <div class="text-[4rem] md:text-[6rem] lg:text-[7rem] text-metallic mt-[-10px] lg:mt-[-15px] drop-shadow-[0_0_20px_var(--tech-glow)] relative overflow-hidden"
+                        style="opacity:0;transform:translateY(20px)">THE_TECH<div
+                            class="absolute top-0 w-1/4 h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-10 skew-x-[-20deg]">
+                        </div>
+                    </div>
+                </h1>
+                <p class="font-mono text-gray-400 text-sm md:text-base max-w-xl mb-12 font-light leading-relaxed border-l border-white/20 pl-6 relative"
+                    style="opacity:0;transform:translateX(-50px) skewX(10deg)">
+                <div class="absolute left-[-1px] top-0 w-[2px] h-8 bg-gdg-blue animate-pulse"></div>Initiate connection
+                sequence. Form your unit, decrypt algorithmic challenges, and breach the global mainframe. Authorized by
+                <span class="text-white font-bold tracking-wider">Google Developer Groups</span>.</p>
+                <div class="flex flex-wrap gap-4" style="opacity:0;transform:translateX(-50px) skewX(10deg)">
+                    <div
+                        class="clip-angled px-6 py-2.5 bg-dark-900 border border-gdg-blue/30 text-white font-display text-xs md:text-sm tracking-widest font-bold uppercase relative overflow-hidden group">
+                        <div
+                            class="absolute inset-0 bg-gdg-blue/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700">
+                        </div><span class="text-gdg-blue mr-2 group-hover:animate-pulse">/</span> <!-- -->PHASE 01:
+                        DECRYPT
+                    </div>
+                    <div
+                        class="clip-angled px-6 py-2.5 bg-dark-900 border border-gdg-yellow/30 text-white font-display text-xs md:text-sm tracking-widest font-bold uppercase relative overflow-hidden group">
+                        <div
+                            class="absolute inset-0 bg-gdg-yellow/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700">
+                        </div><span class="text-gdg-yellow mr-2 group-hover:animate-pulse">/</span> <!-- -->PHASE 02:
+                        ANALYZE
+                    </div>
+                    <div
+                        class="clip-angled px-6 py-2.5 bg-dark-900 border border-gdg-red/30 text-white font-display text-xs md:text-sm tracking-widest font-bold uppercase relative overflow-hidden group">
+                        <div
+                            class="absolute inset-0 bg-gdg-red/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700">
+                        </div><span class="text-gdg-red mr-2 group-hover:animate-pulse">/</span> <!-- -->PHASE 03:
+                        REVERSE
+                    </div>
+                </div>
+            </div>
+            <div class="w-full max-w-lg lg:max-w-xl relative z-20 perspective-1000"
+                style="opacity:0;transform:translateX(50px) scale(0.95)">
+                <div
+                    class="clip-angled bg-dark-900/80 backdrop-blur-3xl border border-white/10 p-1 relative shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+                    <div class="absolute top-0 right-10 w-32 h-[1px] bg-gdg-blue shadow-[0_0_10px_#4285F4]"></div>
+                    <div class="absolute bottom-0 left-10 w-32 h-[1px] bg-gdg-red shadow-[0_0_10px_#EA4335]"></div>
+                    <div class="bg-dark-950 p-8 md:p-12 clip-angled h-full flex flex-col">
+                        <div class="flex gap-4 mb-10 border-b border-white/5 pb-4"><button
+                                class="px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant bg-gdg-blue/20 text-white border-b-2 border-gdg-blue shadow-[0_0_20px_rgba(66,133,244,0.2)]"><span
+                                    class="text-gdg-blue mr-2">►</span>UPLINK</button><button
+                                class="px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant text-gray-500 hover:text-white bg-white/5">NEW_NODE</button>
+                        </div>
+                        <div class="min-h-[360px] relative">
+                            <div class="h-full flex flex-col justify-center gap-8" style="opacity:0;filter:blur(10px)">
+                                <div class="space-y-2">
+                                    <div class="font-mono text-xs text-gdg-blue tracking-[0.4em] uppercase">
+                                        Authentication Required</div>
+                                    <div class="font-display text-3xl font-black text-white tracking-widest">ENTER
+                                        ACCESS VECTOR</div>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-10 bg-gdg-blue">
+                                    </div><input type="text" placeholder="ID: TM-001"
+                                        class="w-full bg-transparent border-b border-white/20 px-6 py-4 text-white font-mono text-2xl tracking-[0.2em] focus:border-gdg-blue outline-none transition-all placeholder:text-gray-700"
+                                        value="" />
+                                </div><button
+                                    class="clip-angled-br w-full bg-gdg-blue/20 hover:bg-gdg-blue text-white border border-gdg-blue py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all shadow-[0_0_20px_rgba(66,133,244,0.3)] hover:shadow-[0_0_40px_rgba(66,133,244,0.6)] mt-auto">INITIATE
+                                    CONNECTION</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute -right-8 top-20 flex flex-col gap-2 opacity-50 hidden md:flex">
+                    <div class="w-6 h-1 bg-white/20"></div>
+                    <div class="w-6 h-1 bg-white/20"></div>
+                    <div class="w-6 h-1 bg-white/20"></div>
+                    <div class="w-6 h-1 bg-white/20"></div>
+                    <div class="w-6 h-1 bg-white/20"></div>
+                </div>
+                <div class="absolute -left-8 bottom-20 flex flex-col gap-2 opacity-50 hidden md:flex">
+                    <div class="w-1 h-12 bg-gdg-red/50"></div>
+                    <div class="w-1 h-4 bg-gdg-red/30"></div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-6 w-full text-center z-10 flex flex-col items-center gap-2"><img alt="GDG Logo"
+                loading="lazy" width="100" height="100" decoding="async" data-nimg="1"
+                class="w-6 h-6 opacity-50 saturate-0 object-contain" style="color:transparent"
+                srcSet="/_next/image?url=%2Fgdg-logo.png&amp;w=128&amp;q=75 1x, /_next/image?url=%2Fgdg-logo.png&amp;w=256&amp;q=75 2x"
+                src="/_next/image?url=%2Fgdg-logo.png&amp;w=256&amp;q=75" />
+            <div class="font-mono text-[10px] text-gray-600 tracking-[0.5em] uppercase">SECURE CONNECTION BY GOOGLE
+                DEVELOPER GROUPS</div>
+        </div>
+    </div><!--$--><!--/$-->
+    <script src="/_next/static/chunks/webpack.js?v=1778701232380" async=""></script>
+    <script>(self.__next_f = self.__next_f || []).push([0]); self.__next_f.push([2, null])</script>
+    <script>self.__next_f.push([1, "1:HL[\"/_next/static/css/app/layout.css?v=1778701232380\",\"style\"]\n0:D{\"name\":\"rQ\",\"env\":\"Server\"}\n"])</script>
+    <script>self.__next_f.push([1, "2:I[\"(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js\",[\"app-pages-internals\",\"static/chunks/app-pages-internals.js\"],\"\"]\n4:I[\"(app-pages-browser)/./node_modules/next/dist/client/components/client-page.js\",[\"app-pages-internals\",\"static/chunks/app-pages-internals.js\"],\"ClientPageRoot\"]\n5:I[\"(app-pages-browser)/./app/page.js\",[\"app/page\",\"static/chunks/app/page.js\"],\"default\"]\n7:I[\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\",[\"app-pages-internals\",\"static/chunks/app-pages-internals.js\"],\"\"]\n8:I[\"(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js\",[\"app-pages-internals\",\"static/chunks/app-pages-internals.js\"],\"\"]\na:I[\"(app-pages-browser)/./node_modules/next/dist/client/link.js\",[\"app/not-found\",\"static/chunks/app/not-found.js\"],\"\"]\nb:I[\"(app-pages-browser)/./node_modules/@vercel/speed-insights/dist/next/index.mjs\",[\"app/layout\",\"static/chunks/app/layout.js\"],\"SpeedInsights\"]\nd:I[\"(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js\",[\"app-pages-internals\",\"static/chunks/app-pages-internals.js\"],\"\"]\n3:D{\"name\":\"\",\"env\":\"Server\"}\n6:D{\"name\":\"RootLayout\",\"env\":\"Server\"}\n9:D{\"name\":\"NotFound\",\"env\":\"Server\"}\n9:[\"$\",\"div\",null,{\"className\":\"min-h-screen cyber-grid flex flex-col items-center justify-center text-center p-8\",\"children\":[[\"$\",\"div\",null,{\"className\":\"font-display font-black text-8xl neon-text-cyan mb-4 glitch\",\"data-text\":\"404\",\"children\":\"404\"}],[\"$\",\"div\",null,{\"className\":\"font-display font-bold text-2xl text-white mb-4 tracking-wider\",\"children\":\"PAGE NOT FOUND\"}],[\"$\",\"div\",null,{\"className\":\"font-mono text-sm text-white/30 mb-8\",\"children\":\"The page you're looking for doesn't exist in this dimension.\"}],[\"$\",\"$La\",null,{\"href\":\"/\",\"className\":\"btn-neon px-8 py-3 font-display font-bold tracking-widest\",\"children\":\"← RETURN HOME\"}]]}]\n6:[\"$\",\"html\",null,{\"lang\":\"en\",\"children\":[\"$\",\"body\",null,{\"className\":\"__variable_0a891c __variable_6184ad __variable_bb2e19 font-b"])</script>
+    <script>self.__next_f.push([1, "ody bg-dark-900 text-white antialiased\",\"children\":[[\"$\",\"$L7\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L8\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$9\",\"notFoundStyles\":[],\"styles\":null}],[\"$\",\"$Lb\",null,{}]]}]}]\nc:D{\"name\":\"\",\"env\":\"Server\"}\ne:[]\n0:[[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/css/app/layout.css?v=1778701232380\",\"precedence\":\"next_static/css/app/layout.css\",\"crossOrigin\":\"$undefined\"}]],[\"$\",\"$L2\",null,{\"buildId\":\"development\",\"assetPrefix\":\"\",\"initialCanonicalUrl\":\"/\",\"initialTree\":[\"\",{\"children\":[\"__PAGE__\",{}]},\"$undefined\",\"$undefined\",true],\"initialSeedData\":[\"\",{\"children\":[\"__PAGE__\",{},[[\"$L3\",[\"$\",\"$L4\",null,{\"props\":{\"params\":{},\"searchParams\":{}},\"Component\":\"$5\"}]],null],null]},[\"$6\",null],null],\"couldBeIntercepted\":false,\"initialHead\":[false,\"$Lc\"],\"globalErrorComponent\":\"$d\",\"missingSlots\":\"$We\"}]]\n"])</script>
+    <script>self.__next_f.push([1, "c:[[\"$\",\"meta\",\"0\",{\"name\":\"viewport\",\"content\":\"width=device-width, initial-scale=1\"}],[\"$\",\"meta\",\"1\",{\"charSet\":\"utf-8\"}],[\"$\",\"title\",\"2\",{\"children\":\"Decode The Tech — Global Tech Quiz\"}],[\"$\",\"meta\",\"3\",{\"name\":\"description\",\"content\":\"Crack the code behind everyday technology. The ultimate high-stakes tech quiz experience by Google Developer Groups.\"}],[\"$\",\"meta\",\"4\",{\"name\":\"author\",\"content\":\"GDG\"}],[\"$\",\"meta\",\"5\",{\"name\":\"keywords\",\"content\":\"GDG,Tech Quiz,Decode The Tech,Hackathon,Coding\"}],[\"$\",\"meta\",\"6\",{\"property\":\"og:title\",\"content\":\"Decode The Tech\"}],[\"$\",\"meta\",\"7\",{\"property\":\"og:description\",\"content\":\"The ultimate high-stakes tech quiz experience.\"}],[\"$\",\"meta\",\"8\",{\"property\":\"og:type\",\"content\":\"website\"}],[\"$\",\"meta\",\"9\",{\"name\":\"twitter:card\",\"content\":\"summary_large_image\"}],[\"$\",\"meta\",\"10\",{\"name\":\"twitter:title\",\"content\":\"Decode The Tech\"}],[\"$\",\"meta\",\"11\",{\"name\":\"twitter:description\",\"content\":\"The ultimate high-stakes tech quiz experience.\"}]]\n3:null\n"])</script>
+</body>
+
+</html>

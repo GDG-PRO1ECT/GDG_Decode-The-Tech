@@ -80,17 +80,26 @@ export async function POST(req) {
   if (Array.isArray(body)) {
     const teamsToCreate = [];
     for (let i = 0; i < body.length; i++) {
+      const { teamName } = body[i];
+      const existing = await Team.findOne({ teamName }).lean();
+      if (existing) continue; // Skip duplicates in bulk
+
       const t = await prepareTeam(body[i], i);
       if (t) {
         teamsToCreate.push({ ...t, ...commonData });
       }
     }
     if (teamsToCreate.length === 0) {
-      return NextResponse.json({ error: 'No new teams to create (duplicates found)' }, { status: 409 });
+      return NextResponse.json({ error: 'No new teams to create (all names already taken)' }, { status: 409 });
     }
     const created = await Team.insertMany(teamsToCreate);
     return NextResponse.json({ teams: created }, { status: 201 });
   } else {
+    const { teamName } = body;
+    const existing = await Team.findOne({ teamName }).lean();
+    if (existing) {
+      return NextResponse.json({ error: 'team name already taken' }, { status: 400 });
+    }
     const t = await prepareTeam(body);
     const team = await Team.create({ ...t, ...commonData });
     return NextResponse.json({ team }, { status: 201 });
