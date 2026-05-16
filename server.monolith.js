@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const http = require('http');
 const next = require('next');
 const { Server } = require('socket.io');
@@ -28,6 +29,7 @@ function getDietLeaderboard(teamId) {
 
 app.prepare().then(() => {
   const server = express();
+  server.use(compression());
   const httpServer = http.createServer(server);
   
   const io = new Server(httpServer, {

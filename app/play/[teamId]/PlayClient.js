@@ -212,7 +212,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
   const triggerDisqualification = useCallback(async (reason = 'Exited fullscreen during active phase') => {
     setIsDisqualifiedLocal(true);
     try {
-      await fetch(`/api/teams/${teamId}/disqualify`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/teams/${teamId}/disqualify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isDisqualified: true, reason }),
@@ -388,7 +388,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
     setSubmitting(true);
     
     try {
-      const res = await fetch('/api/game/submit', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/game/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teamId, questionId: currentQ._id, answer, round }),

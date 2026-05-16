@@ -97,8 +97,12 @@ export async function POST(req) {
   await team.save();
 
   if (global.io) {
-    global.io.emit('leaderboard-update');
-    global.io.to(`team-${teamId}`).emit('team-update', { teamId });
+    // Only emit score delta, not full leaderboard
+    global.io.emit('score_update', {
+      teamId,
+      scores: team.scores,
+      round: roundKey
+    });
   }
 
   return NextResponse.json({

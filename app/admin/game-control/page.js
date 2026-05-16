@@ -25,7 +25,7 @@ export default function GameControlPage() {
 
   useEffect(() => {
     fetchAll();
-    const poll = setInterval(fetchAll, 5000);
+    const poll = setInterval(fetchAll, 30000);
     return () => clearInterval(poll);
   }, []);
 
@@ -64,7 +64,7 @@ export default function GameControlPage() {
     setLoading(true);
     const adminPass = sessionStorage.getItem('admin_pass') || '';
     try {
-      const res = await fetch('/api/game/start', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/game/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPass },
         body: JSON.stringify({ action, round, duration: round ? durations[round] : undefined }),

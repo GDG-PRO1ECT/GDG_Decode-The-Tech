@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node scripts/seed.js",
-    "start:backend": "node server.js",
-    "dev:backend": "node server.js"
+    "start:backend": "npx tsx server-only/server.js",
+    "dev:backend": "npx tsx watch server-only/server.js"
   },
   "dependencies": {
     "@vercel/speed-insights": "^2.0.0",
@@ -30,6 +30,7 @@
     "socket.io-client": "^4.7.5",
     "socket.io-msgpack-parser": "^3.0.2",
     "sonner": "^1.4.41",
+    "tsx": "^4.22.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

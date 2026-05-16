@@ -74,7 +74,7 @@ export default function AdminTeamsPage() {
     
     const adminPass = sessionStorage.getItem('admin_pass') || '';
     try {
-      const res = await fetch(`/api/teams/${teamId}/disqualify`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/teams/${teamId}/disqualify`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPass },
         body: JSON.stringify({ isDisqualified })
       });

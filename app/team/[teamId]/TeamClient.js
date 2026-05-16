@@ -485,8 +485,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
       } catch { }
     }
     fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 10000); // Periodic update
-    return () => clearInterval(interval);
+    return () => {};
   }, [teamId]);
 
   // Qualification: use a ref to track which rounds have shown overlay (resets per page load)

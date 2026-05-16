@@ -9,7 +9,7 @@ export default function AdminLeaderboardPage() {
 
   useEffect(() => {
     loadData();
-    const i = setInterval(loadData, 5000);
+    const i = setInterval(loadData, 30000);
     return () => clearInterval(i);
   }, []);
 
