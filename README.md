@@ -1,4 +1,4 @@
-# 🧠 Decode The Tech — Quiz Platform
+# 🧠 Quiz Platform — Quiz Platform
 
 > Full-featured real-time quiz platform for 50+ teams. Built with **Next.js 14** + **MongoDB**.
 > Cyber aesthetic UI · Fullscreen anti-cheat · Fastest-fingers bonus · 3 rounds · Live projector display.
@@ -37,7 +37,7 @@ npm run seed
 
 # 4. Run
 npm run dev
-# → http://localhost:3000
+# → Frontend: http://localhost:3001 | Backend: http://localhost:4000
 ```
 
 ---

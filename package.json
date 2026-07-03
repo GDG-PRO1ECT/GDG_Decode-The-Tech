@@ -6,42 +6,15 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "seed": "node scripts/seed.js",
-    "start:backend": "npx tsx server-only/server.js",
-    "dev:backend": "npx tsx watch server-only/server.js"
-  },
-  "dependencies": {
-    "@vercel/speed-insights": "^2.0.0",
-    "bcryptjs": "^2.4.3",
-    "clsx": "^2.1.1",
-    "compression": "^1.8.1",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "framer-motion": "^11.2.10",
-    "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.383.0",
-    "mammoth": "^1.12.0",
-    "mongoose": "^8.3.4",
-    "next": "14.2.3",
-    "react": "^18",
-    "react-confetti": "^6.1.0",
-    "react-dom": "^18",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
-    "socket.io-msgpack-parser": "^3.0.2",
-    "sonner": "^1.4.41",
-    "tsx": "^4.22.0",
-    "uuid": "^9.0.1"
+    "dev": "npx concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "start:frontend": "npm run start --prefix frontend",
+    "start:backend": "npm run start --prefix backend",
+    "seed": "npm run seed --prefix backend"
   },
   "devDependencies": {
-    "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.3",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0"
+    "concurrently": "^8.2.2"
   }
 }

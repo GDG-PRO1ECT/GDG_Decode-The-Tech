@@ -13,7 +13,7 @@ async function run() {
   const db = mongoose.connection.db;
 
   console.log('Creating indexes for teams...');
-  await db.collection('teams').createIndex({ teamId: 1 }, { unique: true });
+  await db.collection('teams').createIndex({ quizCode: 1, teamId: 1 }, { unique: true });
   await db.collection('teams').createIndex({ teamNumber: 1 });
   await db.collection('teams').createIndex({ isActive: 1 });
   await db.collection('teams').createIndex({ isDisqualified: 1 });
