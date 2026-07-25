@@ -59,7 +59,7 @@ export default function JoinPage() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md bg-dark-800/60 backdrop-blur-md border border-gdg-blue/30 rounded-2xl p-8 shadow-glass z-10"
+        className="w-full max-w-md bg-dark-800/60 backdrop-blur-md border border-gdg-blue/30 rounded-2xl p-6 sm:p-8 shadow-glass z-10"
       >
         <Link href="/" className="font-mono text-xs text-white/50 hover:text-gdg-blue flex items-center gap-1 mb-6 transition-all">
           &larr; BACK TO PORTAL
@@ -86,7 +86,7 @@ export default function JoinPage() {
                 setError('');
               }}
               placeholder="e.g. DTT7X2"
-              className="w-full px-5 py-4 bg-dark-900 border border-gdg-blue/30 rounded-lg text-white font-mono text-center text-3xl tracking-[0.4em] uppercase focus:outline-none focus:border-gdg-blue focus:shadow-[0_0_15px_rgba(66,133,244,0.3)] transition-all"
+              className="w-full px-5 py-4 bg-dark-900 border border-gdg-blue/30 rounded-lg text-white font-mono text-center text-2xl sm:text-3xl tracking-[0.4em] uppercase focus:outline-none focus:border-gdg-blue focus:shadow-[0_0_15px_rgba(66,133,244,0.3)] transition-all"
             />
           </div>
 

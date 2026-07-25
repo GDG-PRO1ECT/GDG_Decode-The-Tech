@@ -214,15 +214,15 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
              
              {isLive ? (
                <>
-                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-${statusInfo.dot.replace('bg-','')}/30 border-t-transparent animate-[spin_4s_linear_infinite]`} />
-                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-dashed border-${statusInfo.dot.replace('bg-','')}/20 animate-[spin_10s_linear_infinite_reverse]`} />
-                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-${statusInfo.dot.replace('bg-','')}/5 blur-[40px] animate-pulse`} />
+                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-72 sm:h-72 rounded-full border border-${statusInfo.dot.replace('bg-','')}/30 border-t-transparent animate-[spin_4s_linear_infinite]`} />
+                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 sm:w-80 sm:h-80 rounded-full border border-dashed border-${statusInfo.dot.replace('bg-','')}/20 animate-[spin_10s_linear_infinite_reverse]`} />
+                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-64 sm:h-64 rounded-full bg-${statusInfo.dot.replace('bg-','')}/5 blur-[40px] animate-pulse`} />
                  
                  <div className={`font-mono text-[10px] font-bold tracking-[0.4em] mb-4 flex items-center justify-center gap-3 ${session?.isPaused ? 'text-gdg-yellow' : statusInfo.color} uppercase relative z-10`}>
                    <span className={`w-2 h-2 ${session?.isPaused ? 'bg-gdg-yellow shadow-[0_0_10px_#FBBC05]' : statusInfo.dot + ' ' + statusInfo.glow} animate-pulse`}></span>
                    PHASE 0{currentRound} {session?.isPaused ? 'PAUSED' : 'EXECUTION'}
                  </div>
-                 <div className={`font-display font-black text-7xl tracking-tighter relative z-10 transition-colors duration-300 ${timeLeft <= 60 ? 'text-gdg-red animate-pulse drop-shadow-[0_0_30px_rgba(234,67,53,0.8)]' : `text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]`}`}>
+                 <div className={`font-display font-black text-5xl sm:text-7xl tracking-tighter relative z-10 transition-colors duration-300 ${timeLeft <= 60 ? 'text-gdg-red animate-pulse drop-shadow-[0_0_30px_rgba(234,67,53,0.8)]' : `text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]`}`}>
                    {fmtTime(timeLeft)}
                  </div>
                  {timeLeft <= 60 && <div className="font-mono text-[9px] text-white mt-8 tracking-[0.4em] uppercase bg-gdg-red/80 px-6 py-2 font-bold shadow-[0_0_20px_rgba(234,67,53,0.6)] animate-holo-flicker rounded-full relative z-10">CRITICAL TIME T-MINUS 60S</div>}
@@ -317,9 +317,9 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-4 relative z-10">
+                    <div className="mt-auto pt-4 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                        
-                        <div className="flex items-center bg-dark-950 rounded-xl px-3 py-2 border border-white/5 gap-2">
+                        <div className="flex items-center justify-center sm:justify-start bg-dark-950 rounded-xl px-3 py-2 border border-white/5 gap-2">
                           <Clock size={12} className="text-gray-500" />
                           <input
                             type="number"
@@ -337,7 +337,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
                           <span className="text-gray-500 font-mono text-[10px]">SEC</span>
                         </div>
 
-                       <div className="flex items-center gap-2">
+                       <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
                          {isActive && !session?.isPaused && (
                            <>
                              <button onClick={() => gameAction('pause_round', r)} disabled={loading}
@@ -377,7 +377,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
         </motion.div>
 
         {/* RIGHT COLUMN: Live Telemetry */}
-        <motion.div variants={itemVars} className="xl:col-span-3 h-[600px] xl:h-auto">
+        <motion.div variants={itemVars} className="hidden xl:block xl:col-span-3 xl:h-auto">
           <div className="glass-panel p-6 rounded-[2rem] border border-white/10 relative h-full flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-gdg-blue/5 blur-[50px] pointer-events-none" />
             
