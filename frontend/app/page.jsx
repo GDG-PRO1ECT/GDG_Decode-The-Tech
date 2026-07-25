@@ -141,12 +141,9 @@ export default function Page() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? 'py-4 bg-[#050505]/80 backdrop-blur-md border-b border-white/5' : 'py-8 bg-transparent'}`}>
         <div className="container mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* GDG Logo Style Icon */}
-            <div className="flex gap-0.5 items-center">
-              <div className="w-2.5 h-2.5 rounded-sm bg-[#4285F4]"></div>
-              <div className="w-2.5 h-2.5 rounded-sm bg-[#EA4335]"></div>
-              <div className="w-2.5 h-2.5 rounded-sm bg-[#FBBC05]"></div>
-              <div className="w-2.5 h-2.5 rounded-sm bg-[#34A853]"></div>
+            {/* GDG Logo */}
+            <div className="flex gap-0.5 items-center mix-blend-screen">
+              <img src="/gdg-logo.png" alt="GDG Logo" className="w-6 h-6 md:w-8 md:h-8 object-contain" />
             </div>
             <a href="#" className="text-xl md:text-2xl font-bold tracking-tighter font-serif">
                 Intelligent Arena.

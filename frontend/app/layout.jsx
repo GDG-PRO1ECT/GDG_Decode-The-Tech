@@ -43,6 +43,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${orbitron.variable} ${rajdhani.variable} ${shareTechMono.variable} font-body bg-dark-900 text-white antialiased`}>
         {children}
+        <div className="fixed bottom-4 right-4 z-[9999] opacity-70 hover:opacity-100 transition-opacity pointer-events-none mix-blend-screen">
+          <img src="/gdg-logo.png" alt="GDG Logo" className="w-8 h-8 object-contain" />
+        </div>
         <SpeedInsights />
       </body>
     </html>
