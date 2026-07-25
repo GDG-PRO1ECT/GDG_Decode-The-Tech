@@ -28,7 +28,7 @@ export default function AdminArenaPage() {
   async function fetchQuestions() {
     try {
       const adminPass = sessionStorage.getItem(`admin_pass_${quizCode}`) || '';
-      const res = await fetch('/api/admin/questions', {
+      const res = await fetch(`/api/admin/questions?quizCode=${quizCode}`, {
         headers: { 'x-admin-password': adminPass },
       });
       if (!res.ok) { setError('Unauthorized — please log in as admin'); setLoading(false); return; }

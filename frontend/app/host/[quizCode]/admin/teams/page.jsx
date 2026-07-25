@@ -85,7 +85,7 @@ export default function AdminTeamsPage() {
     if (!confirm(`${actionStr} this node?`)) return;
     
     try {
-      const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/teams/${teamId}/disqualify`, {
+      const res = await authenticatedFetch(`/api/teams/${teamId}/disqualify`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isDisqualified, quizCode })
       });

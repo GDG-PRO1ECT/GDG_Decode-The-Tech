@@ -119,7 +119,8 @@ io.on('connection', (socket) => {
     socket.join(`team_${teamId}`);
     socket.join(`quiz_${quizCode}`);
     if (global.gameCache[quizCode]) {
-      socket.emit('leaderboard_update', global.gameCache[quizCode].leaderboard);
+      const { getDietLeaderboard } = await import('./lib/broadcast.js');
+      socket.emit('leaderboard_update', getDietLeaderboard(global.gameCache[quizCode].leaderboard, teamId));
     }
   });
 
