@@ -4,11 +4,24 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 export default function LoadingScreen() {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
-  const pathname = usePathname();
+  const [forceHide, setForceHide] = useState(false);
 
   useEffect(() => {
+    // 1. Check if we should bypass this route on the client
+    const path = window.location.pathname || pathname || '';
+    const shouldBypass = path.includes('/admin') || path.includes('/quiz');
+
+    if (shouldBypass) {
+      setForceHide(true);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Otherwise, run the normal loading sequence
+    setForceHide(false);
     setLoading(true);
     setFadeOut(false);
 
@@ -27,10 +40,11 @@ export default function LoadingScreen() {
     };
   }, [pathname]);
 
-  if (!loading) return null;
+  // Aggressive bail-out if bypassed, or if it naturally finished loading
+  if (forceHide || !loading) return null;
 
   return (
-    <div className={`fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#000000] overflow-hidden transition-all duration-[800ms] ease-[cubic-bezier(0.7,0,0.3,1)] ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#000000] overflow-hidden transition-all duration-[800ms] ease-[cubic-bezier(0.7,0,0.3,1)] ${fadeOut ? 'opacity-0' : 'opacity-100'} ${forceHide ? 'hidden' : ''}`}>
       
       {/* Cinematic Eclipse Core */}
       <div className="relative flex items-center justify-center z-10">
