@@ -22,6 +22,9 @@ export default function AdminTeamsPage() {
   const [scoreForm, setScoreForm] = useState({ round1: 0, round2: 0, round3: 0, bonusPoints: 0 });
   const [baseUrl, setBaseUrl] = useState('');
   const [copied, setCopied] = useState('');
+  const [showManual, setShowManual] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
+  const [editingScore, setEditingScore] = useState(null);
   const { authenticatedFetch } = useAdminAuth(quizCode);
 
   useEffect(() => { 
