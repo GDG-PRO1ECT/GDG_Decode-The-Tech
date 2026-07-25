@@ -2,542 +2,405 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import {
-  ArrowRight, Lock, Shield, Zap, Layers,
-  Activity, Clock, ArrowUpRight,
-  Trophy, Sparkles, FileText, Users, BarChart3,
-  Cpu, Globe, Check, ChevronRight
-} from 'lucide-react';
+import { ArrowRight, Star, Activity, Lock, Cloud, Cpu, Shield, Zap, Sparkles, Database } from 'lucide-react';
+import { Inter, Playfair_Display } from 'next/font/google';
 
-const kineticWords = ['velocity.', 'precision.', 'mastery.', 'momentum.'];
-
-const ease = [0.25, 0.46, 0.45, 0.94];
-
-const hostSteps = [
-  { n: '01', title: 'Set Event Details',    body: 'Name, description, institution and session configuration.'     },
-  { n: '02', title: 'Design Rounds',        body: 'Build 5 dynamic game modes with AI-parsed or manual questions.' },
-  { n: '03', title: 'Invite Participants',  body: 'Share the generated code — teams join instantly, no install.'   },
-  { n: '04', title: 'Go Live',              body: 'Monitor real-time scores, leaderboards and integrity alerts.'    },
-];
-
-const hostCapabilities = [
-  'AI DOCX Question Parser', 'Multi-Team Management', 'Live Leaderboards',
-  'Anti-Cheat Engine',       'WebSocket Cluster',      '5 Tournament Modes',
-];
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const playfair = Playfair_Display({ subsets: ['latin'], style: ['normal', 'italic'], variable: '--font-playfair' });
 
 export default function Page() {
   const router = useRouter();
 
   // State
-  const [tab, setTab]           = useState('join');   // 'join' | 'host'
   const [code, setCode]         = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
-  const [focused, setFocused]   = useState(false);
   const [sysTime, setSysTime]   = useState('');
-  const [wordIdx, setWordIdx]   = useState(0);
-  const [chars, setChars]       = useState(['','','','','','']);
+  const [scrolled, setScrolled] = useState(0);
 
   useEffect(() => {
-    const fmt = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setSysTime(fmt());
-    const t1 = setInterval(() => setSysTime(fmt()), 1000);
-    const t2 = setInterval(() => setWordIdx(p => (p + 1) % kineticWords.length), 3400);
-    return () => { clearInterval(t1); clearInterval(t2); };
+    // 1. Reveal Elements on Scroll
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // 2. Scroll Parallax & Navbar
+    const handleScroll = () => setScrolled(window.scrollY);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Time Clock
+    const updateTime = () => {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      setSysTime(`${hours}:${minutes} ${ampm}`);
+    };
+    const t1 = setInterval(updateTime, 60000);
+    updateTime();
+
+    return () => {
+      revealObserver.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      clearInterval(t1);
+    };
   }, []);
 
   const changeCode = useCallback((val) => {
     const v = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     setCode(v);
     setError('');
-    const c = Array(6).fill('');
-    v.split('').forEach((ch, i) => { c[i] = ch; });
-    setChars(c);
   }, []);
 
   const handleJoin = async (e) => {
     if (e) e.preventDefault();
-    if (code.length !== 6) { setError('Please enter your complete 6-character access code.'); return; }
+    if (code.length !== 6) { setError('Please enter your 6-character access code.'); return; }
     setLoading(true); setError('');
     try {
       const upper = code.toUpperCase();
       const res   = await fetch(`/api/game/status?quizCode=${upper}`);
       const data  = await res.json();
       if (!res.ok || !data.session) {
-        setError('Access code not found — please verify with your organizer.');
+        setError('Access code not found.');
         setLoading(false); return;
       }
       if (data.session.status === 'draft') {
-        setError('This session is still being prepared by the host.');
+        setError('Session is still being prepared.');
         setLoading(false); return;
       }
       router.push(`/quiz/${upper}`);
     } catch {
-      setError('Connection failed. Please check your network.');
+      setError('Connection failed. Check network.');
       setLoading(false);
     }
   };
 
-  // ─── derived
-  const cardReady = tab === 'join' ? (code.length === 6 && !loading) : true;
+  const navScrolled = scrolled > 50;
 
   return (
-    <div className="relative h-screen max-h-screen flex flex-col font-sans overflow-hidden"
-      style={{ background: '#0D0D10', color: '#fff' }}>
+    <div className={`min-h-screen bg-[#050505] text-white selection:bg-[#4285F4] selection:text-white ${inter.variable} ${playfair.variable} font-sans overflow-x-hidden relative`}>
+      <style dangerouslySetInnerHTML={{__html: `
+        :root {
+            --bg: #050505;
+        }
+        .font-serif { font-family: var(--font-playfair), serif; }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @keyframes float-hand-left {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        @keyframes float-hand-right {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(20px) rotate(-2deg); }
+        }
+        @keyframes float-tech {
+            0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+            50% { transform: translateY(-15px) rotate(10deg) scale(1.05); }
+        }
+        .animate-float-left { animation: float-hand-left 12s ease-in-out infinite; }
+        .animate-float-right { animation: float-hand-right 14s ease-in-out infinite; }
+        .animate-float-tech { animation: float-tech 8s ease-in-out infinite; }
+        
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.05;
+            mix-blend-mode: overlay;
+            background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+        }
+      `}} />
 
-      {/* ─── BACKGROUND ─── */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Very subtle blue-indigo ambient glow left */}
-        <div style={{
-          position: 'absolute', left: '-5%', top: '-5%',
-          width: '55vw', height: '70vh',
-          background: 'radial-gradient(ellipse at 25% 30%, rgba(63,94,251,0.12) 0%, rgba(40,60,160,0.05) 50%, transparent 72%)',
-          filter: 'blur(80px)'
-        }} />
-        {/* Subtle warm indigo right */}
-        <div style={{
-          position: 'absolute', right: '-8%', bottom: '5%',
-          width: '50vw', height: '60vh',
-          background: 'radial-gradient(ellipse at 70% 70%, rgba(120,60,220,0.10) 0%, rgba(60,30,120,0.05) 55%, transparent 72%)',
-          filter: 'blur(90px)'
-        }} />
-        {/* Refined micro-grid */}
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.025,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
-          backgroundSize: '52px 52px'
-        }} />
-        {/* Top/bottom hairlines */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.08) 60%, transparent)' }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent)' }} />
-      </div>
+      {/* Global Noise Overlay */}
+      <div className="noise-overlay"></div>
 
-      {/* ─── HEADER ─── */}
-      <header className="relative z-20 shrink-0 flex items-center justify-between px-6 sm:px-10 lg:px-16 py-4"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(13,13,16,0.80)', backdropFilter: 'blur(24px)' }}>
-
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <div style={{
-            width: 30, height: 30, borderRadius: 8,
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%)',
-            border: '1px solid rgba(255,255,255,0.14)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L15 5v6L8 15 1 11V5L8 1z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinejoin="round"/>
-              <path d="M8 5l4 2.5v3L8 13l-4-2.5v-3L8 5z" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8"/>
-            </svg>
-          </div>
-          <span style={{ fontSize: 14.5, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.90)' }}>
-            Intelligent Arena
-          </span>
-          <span style={{
-            fontSize: 9, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.12em',
-            padding: '2px 7px', borderRadius: 20,
-            background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.22)', color: 'rgba(165,163,255,0.90)'
-          }}>GLOBAL</span>
-        </div>
-
-        {/* Header right */}
-        <div className="flex items-center gap-3">
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '5px 12px', borderRadius: 99,
-            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)'
-          }} className="hidden sm:flex">
-            <span style={{ position: 'relative', display: 'inline-flex' }}>
-              <span className="animate-ping" style={{ position: 'absolute', inset: 0, width: 6, height: 6, borderRadius: '50%', background: '#4ade80', opacity: 0.5 }} />
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', flexShrink: 0 }} />
-            </span>
-            <span style={{ fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.55)' }}>All systems operational</span>
-          </div>
-          <div className="hidden md:flex" style={{
-            fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.38)',
-            padding: '5px 11px', borderRadius: 7,
-            background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)'
-          }}>
-            {sysTime || '--:--:--'}
-          </div>
-        </div>
-      </header>
-
-      {/* ─── MAIN SPLIT ─── */}
-      <main className="relative z-10 flex-1 min-h-0 w-full max-w-[1340px] mx-auto px-6 sm:px-10 lg:px-16 grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-16 py-3">
-
-        {/* ════ LEFT: EDITORIAL ════ */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } } }}
-          className="flex flex-col"
-        >
-          {/* Live badge */}
-          <motion.div
-            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
-            className="mb-6 flex items-center gap-2"
-          >
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '6px 14px', borderRadius: 99,
-              background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.22)',
-              fontSize: 11.5, fontWeight: 500, color: 'rgba(178,176,255,0.85)'
-            }}>
-              <Globe size={11} style={{ color: '#818cf8' }} />
-              Enterprise Assessment Platform — Global Rollout
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? 'py-4 bg-[#050505]/80 backdrop-blur-md border-b border-white/5' : 'py-8 bg-transparent'}`}>
+        <div className="container mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* GDG Logo Style Icon */}
+            <div className="flex gap-0.5 items-center">
+              <div className="w-2.5 h-2.5 rounded-sm bg-[#4285F4]"></div>
+              <div className="w-2.5 h-2.5 rounded-sm bg-[#EA4335]"></div>
+              <div className="w-2.5 h-2.5 rounded-sm bg-[#FBBC05]"></div>
+              <div className="w-2.5 h-2.5 rounded-sm bg-[#34A853]"></div>
             </div>
-          </motion.div>
+            <a href="#" className="text-xl md:text-2xl font-bold tracking-tighter font-serif">
+                Intelligent Arena.
+            </a>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-8">
+              <a href="#expertise" className="text-sm text-gray-400 hover:text-white transition-colors duration-300">Capabilities</a>
+              <a href="#works" className="text-sm text-gray-400 hover:text-white transition-colors duration-300">Tournaments</a>
+          </div>
 
-          {/* Headline */}
-          <motion.h1
-            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease } } }}
-            style={{ fontSize: 'clamp(2rem, 4vw, 3.6rem)', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.07, marginBottom: 18, color: '#fff' }}
-          >
-            Where knowledge<br />meets{' '}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={wordIdx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.32, ease }}
-                  style={{
-                    display: 'inline-block',
-                    background: 'linear-gradient(125deg, #a5b4fc 0%, #818cf8 40%, #c4b5fd 100%)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                  }}
-                >
-                  {kineticWords[wordIdx]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </motion.h1>
+          <a href="#works" className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-medium bg-[#4285F4] text-white hover:scale-105 hover:bg-[#3b78e7] shadow-[0_0_15px_rgba(66,133,244,0.4)] transition-all duration-300">
+              Join Event
+          </a>
+        </div>
+      </nav>
 
-          {/* Sub-headline */}
-          <motion.p
-            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
-            style={{ fontSize: 14.5, lineHeight: 1.72, color: 'rgba(255,255,255,0.45)', maxWidth: 400, marginBottom: 28 }}
-          >
-            Built for global scale — sub-millisecond WebSocket synchronization, AI-powered
-            question generation, and enterprise-grade anti-cheat enforcement.
-          </motion.p>
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32 pb-20 bg-[#050505]">
+        {/* Background Atmosphere */}
+        <div className="absolute inset-0 z-0 pointer-events-none select-none">
+            <div className="absolute top-0 left-0 w-full h-full opacity-60 mix-blend-screen">
+                <img src="https://framerusercontent.com/images/9zvwRJAavKKacVyhFCwHyXW1U.png?width=1536&height=1024" alt="Atmosphere" className="w-full h-full object-cover object-center opacity-80" />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050505] z-10"></div>
+            
+            {/* Google Colored Ambient Lights */}
+            <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] rounded-full bg-[#4285F4] mix-blend-screen filter blur-[150px] opacity-20"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vw] rounded-full bg-[#EA4335] mix-blend-screen filter blur-[150px] opacity-10"></div>
+        </div>
 
-          {/* Feature rows */}
-          <motion.div
-            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
-            className="flex flex-col gap-2.5 mb-8"
-          >
-            {[
-              { icon: Zap,    text: 'Sub-15ms real-time WebSocket synchronization' },
-              { icon: Shield, text: 'AI background-tab monitoring & penalty system' },
-              { icon: Layers, text: 'One-click AI question generation from DOCX files' },
-            ].map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div style={{
-                  width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(129,140,248,0.10)', border: '1px solid rgba(129,140,248,0.20)'
-                }}>
-                  <f.icon size={10} style={{ color: '#a5b4fc' }} />
+        {/* Floating Surrealist Elements & Tech Details */}
+        <div className="absolute -left-[10%] top-[-10%] md:left-[-5%] md:top-[-15%] w-[50vw] md:w-[40vw] max-w-[800px] z-10 pointer-events-none mix-blend-hard-light opacity-80 animate-float-left">
+             <img src="https://framerusercontent.com/images/KNhiA5A2ykNYqNkj04Hk6BVg5A.png?width=1540&height=1320" alt="Hand Reaching" className="w-full h-auto object-contain" />
+        </div>
+        
+        {/* Added Tech Element */}
+        <div className="absolute left-[15%] top-[25%] md:top-[30%] z-20 pointer-events-none animate-float-tech opacity-60" style={{ animationDelay: '1s' }}>
+             <Cloud className="text-[#FBBC05] w-12 h-12 md:w-16 md:h-16" />
+        </div>
+
+        <div className="absolute -right-[10%] bottom-[-10%] md:right-[-5%] md:bottom-[-5%] w-[45vw] md:w-[35vw] max-w-[700px] z-10 pointer-events-none mix-blend-hard-light opacity-80 animate-float-right">
+             <img src="https://framerusercontent.com/images/X89VFCABCEjjZ4oLGa3PjbOmsA.png?width=1542&height=1002" alt="Hand Receiving" className="w-full h-auto object-contain" />
+        </div>
+        
+        {/* Added Tech Element */}
+        <div className="absolute right-[15%] bottom-[25%] md:bottom-[30%] z-20 pointer-events-none animate-float-tech opacity-60" style={{ animationDelay: '2s' }}>
+             <Cpu className="text-[#34A853] w-12 h-12 md:w-16 md:h-16" />
+        </div>
+
+        {/* Hero Content */}
+        <div className="container mx-auto px-6 relative z-20 text-center flex flex-col items-center justify-center h-full">
+            <div className="max-w-4xl mx-auto" style={{ transform: `translateY(${Math.min(scrolled * 0.4, 400)}px)`, opacity: Math.max(0, 1 - scrolled / 600) }}>
+                <div className="reveal">
+                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-medium leading-[1.1] tracking-tight mb-6 text-[#f8f9fa] mix-blend-overlay font-serif" 
+                        style={{ textShadow: '0 0 15px rgba(255,255,255,0.5)' }}>
+                        Intelligent Arena. <br />
+                        <span className="italic font-light text-[#e8eaed]">The ultimate quiz platform.</span>
+                    </h1>
                 </div>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.52)' }}>{f.text}</span>
-              </div>
-            ))}
-          </motion.div>
+                
+                <div className="reveal" style={{ transitionDelay: '200ms' }}>
+                    <p className="text-base md:text-lg text-[#dadce0] max-w-lg mx-auto mb-16 font-light tracking-wide leading-relaxed mix-blend-overlay"
+                       style={{ textShadow: '0 0 12px rgba(255,255,255,0.4)' }}>
+                        Built for global scale — sub-millisecond WebSocket synchronization, AI-powered question generation, and enterprise-grade anti-cheat enforcement.
+                    </p>
+                </div>
 
-          {/* Stats strip */}
-          <motion.div
-            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.6, delay: 0.28 } } }}
-            style={{ display: 'flex', alignItems: 'center', gap: 28, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.07)' }}
-          >
-            {[
-              { v: '<15ms', l: 'WebSocket Latency' },
-              { v: '5',     l: 'Tournament Modes'  },
-              { v: '100%',  l: 'Real-Time Sync'    },
-            ].map((s, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: '#fff' }}>{s.v}</span>
-                <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.32)', fontWeight: 500 }}>{s.l}</span>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
+                <div className="reveal flex flex-col items-center gap-6" style={{ transitionDelay: '400ms' }}>
+                    <a href="#works" className="relative group cursor-pointer">
+                       <div className="absolute inset-0 bg-[#4285F4]/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                       <div className="relative border border-[#4285F4]/30 bg-white/5 backdrop-blur-sm px-8 py-3 rounded-full flex items-center gap-3 text-xs md:text-sm text-white/90 uppercase tracking-widest hover:bg-[#4285F4]/10 hover:border-[#4285F4]/50 transition-all duration-300">
+                         <span>Enter Access Code</span>
+                       </div>
+                    </a>
+                    
+                    <div className="flex items-center gap-4 text-[10px] md:text-xs text-white/40 uppercase tracking-widest mt-8 font-mono">
+                       <span>{sysTime || '--:--'}</span>
+                       <span className="w-px h-3 bg-white/20"></span>
+                       <span className="flex items-center gap-1.5"><Activity size={12} className="text-[#34A853]" /> ONLINE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
 
-        {/* ════ RIGHT: SINGLE PREMIUM CARD ════ */}
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.70, delay: 0.16, ease }}
-          style={{ width: '100%', maxWidth: 480, justifySelf: 'end' }}
-        >
-          <div style={{
-            borderRadius: 24,
-            background: 'rgba(255,255,255,0.030)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            backdropFilter: 'blur(40px)',
-            boxShadow: '0 32px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)',
-            overflow: 'hidden',
-          }}>
-
-            {/* Tab switcher */}
-            <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr',
-              padding: '6px 6px 0',
-              borderBottom: '1px solid rgba(255,255,255,0.07)',
-              background: 'rgba(0,0,0,0.2)',
-            }}>
-              {[
-                { id: 'join', label: 'Join Tournament' },
-                { id: 'host', label: 'Host Tournament' },
-              ].map(t => (
-                <button key={t.id} onClick={() => { setTab(t.id); setError(''); }}
-                  style={{
-                    padding: '10px 0', fontSize: 12.5, fontWeight: 600,
-                    borderRadius: '10px 10px 0 0',
-                    cursor: 'pointer', transition: 'all 0.2s',
-                    color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.38)',
-                    background: tab === t.id ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    border: 'none',
-                    borderBottom: tab === t.id ? '2px solid rgba(129,140,248,0.70)' : '2px solid transparent',
-                    letterSpacing: '0.01em',
-                  }}>
-                  {t.label}
-                </button>
-              ))}
+      {/* Mission Section */}
+      <section id="expertise" className="py-32 relative">
+        <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto text-center reveal">
+                <h2 className="text-3xl md:text-5xl lg:text-6xl leading-tight text-white/90 mb-12 font-serif">
+                    We enforce integrity where it matters most.
+                </h2>
+                <p className="text-xl md:text-2xl text-gray-500 leading-relaxed font-light">
+                    Zero latency. Absolute precision. We remove the noise so your competition resonates with absolute clarity.
+                </p>
             </div>
 
-            {/* Card body */}
-            <div style={{ padding: '24px 28px 28px' }}>
-              <AnimatePresence mode="wait">
-
-                {/* ── JOIN TAB ── */}
-                {tab === 'join' && (
-                  <motion.div key="join"
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.22, ease }}>
-
-                    <div style={{ marginBottom: 20 }}>
-                      <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: '#fff', marginBottom: 4 }}>
-                        Enter access code
-                      </h2>
-                      <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.40)', lineHeight: 1.6 }}>
-                        Your event coordinator will provide a 6-character code.
-                      </p>
-                    </div>
-
-                    <form onSubmit={handleJoin}>
-                      {/* OTP boxes */}
-                      <div style={{ marginBottom: 16, position: 'relative' }}>
-                        <input type="text" maxLength={6} value={code} disabled={loading}
-                          onChange={e => changeCode(e.target.value)}
-                          onFocus={() => setFocused(true)}
-                          onBlur={() => setFocused(false)}
-                          style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'text', zIndex: 10 }}
-                          autoFocus
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-                          {chars.map((ch, idx) => {
-                            const cur    = focused && code.length === idx;
-                            const filled = ch !== '';
-                            return (
-                              <motion.div key={idx}
-                                animate={{
-                                  borderColor: filled ? 'rgba(165,180,252,0.60)' : cur ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.10)',
-                                  background:  filled ? 'rgba(129,140,248,0.09)' : 'rgba(255,255,255,0.025)',
-                                }}
-                                transition={{ duration: 0.15 }}
-                                style={{
-                                  aspectRatio: '3/4', maxHeight: 64, borderRadius: 12,
-                                  border: '1px solid',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontFamily: 'monospace', fontSize: 20, fontWeight: 800,
-                                  boxShadow: filled ? '0 0 14px rgba(129,140,248,0.18)' : 'none',
-                                }}>
-                                <AnimatePresence mode="wait">
-                                  {ch ? (
-                                    <motion.span key={`${idx}${ch}`}
-                                      initial={{ opacity: 0, scale: 0.5, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-                                      exit={{ opacity: 0, scale: 0.5, y: -6 }} transition={{ duration: 0.12 }}
-                                      style={{ color: '#c7d2fe' }}>
-                                      {ch}
-                                    </motion.span>
-                                  ) : cur ? (
-                                    <motion.span
-                                      animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.9, repeat: Infinity }}
-                                      style={{ width: 2, height: 18, background: 'rgba(255,255,255,0.55)', borderRadius: 2, display: 'block' }}
-                                    />
-                                  ) : null}
-                                </AnimatePresence>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <AnimatePresence>
-                        {error && (
-                          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 8,
-                              padding: '9px 13px', borderRadius: 10, marginBottom: 14,
-                              background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.22)',
-                              fontSize: 11.5, fontFamily: 'monospace', color: '#fca5a5'
-                            }}>
-                            <Lock size={11} style={{ color: '#f87171', flexShrink: 0 }} />{error}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <button type="submit" disabled={loading || code.length !== 6}
-                        style={{
-                          width: '100%', padding: '12px 0', borderRadius: 12,
-                          fontSize: 14, fontWeight: 600, letterSpacing: '0.01em',
-                          cursor: code.length === 6 && !loading ? 'pointer' : 'not-allowed',
-                          transition: 'all 0.2s',
-                          background: code.length === 6 && !loading
-                            ? 'linear-gradient(135deg, #fff 0%, #e8eaf0 100%)'
-                            : 'rgba(255,255,255,0.05)',
-                          color: code.length === 6 && !loading ? '#0d0d10' : 'rgba(255,255,255,0.22)',
-                          border: code.length === 6 && !loading ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                          boxShadow: code.length === 6 && !loading ? '0 8px 24px rgba(0,0,0,0.35)' : 'none',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                        }}>
-                        {loading
-                          ? <><Activity size={14} style={{ animation: 'spin 1s linear infinite' }} /><span>Connecting...</span></>
-                          : <><span>Join Session</span><ArrowRight size={14} /></>}
-                      </button>
-                    </form>
-                  </motion.div>
-                )}
-
-                {/* ── HOST TAB ── */}
-                {tab === 'host' && (
-                  <motion.div key="host"
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.22, ease }}>
-
-                    <div style={{ marginBottom: 18 }}>
-                      <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', color: '#fff', marginBottom: 4 }}>
-                        Create a tournament
-                      </h2>
-                      <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.40)', lineHeight: 1.6 }}>
-                        AI-powered setup in four guided steps. No technical expertise needed.
-                      </p>
-                    </div>
-
-                    {/* 4-step process */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 18, position: 'relative' }}>
-                      {/* Connector line */}
-                      <div style={{
-                        position: 'absolute', left: 15, top: 20, bottom: 20, width: 1,
-                        background: 'linear-gradient(180deg, rgba(129,140,248,0.40) 0%, rgba(129,140,248,0.10) 100%)'
-                      }} />
-                      {hostSteps.map((s, i) => (
-                        <motion.div key={i}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.4, delay: i * 0.07, ease }}
-                          style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '8px 0' }}>
-                          {/* Step number pill */}
-                          <div style={{
-                            width: 30, height: 30, borderRadius: '50%', flexShrink: 0, zIndex: 1,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 10, fontFamily: 'monospace', fontWeight: 800, letterSpacing: '0.04em',
-                            background: 'rgba(129,140,248,0.14)', border: '1px solid rgba(129,140,248,0.28)',
-                            color: 'rgba(165,180,252,0.90)'
-                          }}>
-                            {s.n}
-                          </div>
-                          <div style={{ paddingTop: 5 }}>
-                            <div style={{ fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.80)', marginBottom: 2 }}>{s.title}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{s.body}</div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Capabilities grid — 3 columns */}
-                    <div style={{
-                      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-                      gap: 6, marginBottom: 20,
-                      padding: '12px', borderRadius: 12,
-                      background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'
-                    }}>
-                      {hostCapabilities.map((cap, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(129,140,248,0.70)', flexShrink: 0 }} />
-                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.48)', lineHeight: 1.3 }}>{cap}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Host CTA */}
-                    <Link href="/host" style={{ display: 'block', width: '100%' }}>
-                      <button style={{
-                        width: '100%', padding: '12px 0', borderRadius: 12,
-                        fontSize: 14, fontWeight: 600, letterSpacing: '0.01em',
-                        cursor: 'pointer', transition: 'all 0.2s',
-                        background: 'linear-gradient(135deg, rgba(129,140,248,0.20) 0%, rgba(167,139,250,0.15) 100%)',
-                        border: '1px solid rgba(129,140,248,0.30)',
-                        color: 'rgba(210,205,255,0.95)',
-                        boxShadow: '0 4px 20px rgba(99,102,241,0.20)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                      }}>
-                        <Sparkles size={14} style={{ color: '#a5b4fc' }} />
-                        <span>Launch New Tournament</span>
-                        <ArrowUpRight size={13} style={{ color: 'rgba(165,180,252,0.60)' }} />
-                      </button>
-                    </Link>
-
-                    {/* Host KPIs */}
-                    <div style={{
-                      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-                      marginTop: 18, paddingTop: 16,
-                      borderTop: '1px solid rgba(255,255,255,0.07)',
-                      textAlign: 'center'
-                    }}>
-                      {[
-                        { v: '<2 min', l: 'Setup Time',    c: '#a78bfa' },
-                        { v: '∞',      l: 'Team Capacity', c: '#60a5fa' },
-                        { v: '99.9%',  l: 'Uptime SLA',    c: '#34d399' },
-                      ].map((m, i) => (
-                        <div key={i}>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: m.c }}>{m.v}</div>
-                          <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.28)', marginTop: 2, fontWeight: 500 }}>{m.l}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* Core Tech Grid */}
+            <div className="mt-20 md:mt-32 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center transition-all duration-500">
+                <div className="reveal flex flex-col items-center gap-4 group">
+                  <div className="w-16 h-16 rounded-full bg-[#4285F4]/10 border border-[#4285F4]/30 flex items-center justify-center group-hover:bg-[#4285F4]/20 transition-colors">
+                    <Zap className="text-[#4285F4]" size={28} />
+                  </div>
+                  <div className="font-bold text-sm tracking-widest text-white/70 group-hover:text-white transition-colors">LOW LATENCY</div>
+                </div>
+                <div className="reveal flex flex-col items-center gap-4 group" style={{ transitionDelay: '100ms' }}>
+                  <div className="w-16 h-16 rounded-full bg-[#EA4335]/10 border border-[#EA4335]/30 flex items-center justify-center group-hover:bg-[#EA4335]/20 transition-colors">
+                    <Shield className="text-[#EA4335]" size={28} />
+                  </div>
+                  <div className="font-bold text-sm tracking-widest text-white/70 group-hover:text-white transition-colors">ANTI-CHEAT</div>
+                </div>
+                <div className="reveal flex flex-col items-center gap-4 group" style={{ transitionDelay: '200ms' }}>
+                  <div className="w-16 h-16 rounded-full bg-[#FBBC05]/10 border border-[#FBBC05]/30 flex items-center justify-center group-hover:bg-[#FBBC05]/20 transition-colors">
+                    <Database className="text-[#FBBC05]" size={28} />
+                  </div>
+                  <div className="font-bold text-sm tracking-widest text-white/70 group-hover:text-white transition-colors">REAL-TIME</div>
+                </div>
+                <div className="reveal flex flex-col items-center gap-4 group" style={{ transitionDelay: '300ms' }}>
+                  <div className="w-16 h-16 rounded-full bg-[#34A853]/10 border border-[#34A853]/30 flex items-center justify-center group-hover:bg-[#34A853]/20 transition-colors">
+                    <Cloud className="text-[#34A853]" size={28} />
+                  </div>
+                  <div className="font-bold text-sm tracking-widest text-white/70 group-hover:text-white transition-colors">AI PARSING</div>
+                </div>
             </div>
-          </div>
-        </motion.div>
-      </main>
+        </div>
+      </section>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="relative z-20 shrink-0 px-6 sm:px-10 lg:px-16 py-3.5"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(13,13,16,0.85)', backdropFilter: 'blur(20px)' }}>
-        <div style={{ maxWidth: 1340, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 20px' }}>
-            {[
-              { icon: Zap,    l: 'Sub-15ms Sync',  c: '#60a5fa' },
-              { icon: Shield, l: 'Anti-Cheat AI',  c: '#34d399' },
-              { icon: Layers, l: 'DOCX AI Parsing',c: '#a78bfa' },
-              { icon: Globe,  l: 'Global Scale',   c: '#818cf8' },
-            ].map((p, i) => (
-              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.30)' }}>
-                <p.icon size={11} style={{ color: p.c, opacity: 0.5 }} />{p.l}
-              </span>
-            ))}
-          </div>
-          <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.18)', flexShrink: 0 }}>
-            © 2026 Intelligent Arena · Global
-          </span>
+      {/* Cards Section */}
+      <section id="works" className="py-40 relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+            <div className="reveal mb-20 md:mb-32">
+                <h2 className="text-4xl sm:text-5xl md:text-7xl text-center font-serif">
+                    Define your <br />
+                    <span className="italic">tournament</span>
+                </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                {/* Card 1 - GDG Blue (Join) */}
+                <div style={{ transform: `translateY(${scrolled * 0.05}px)` }}>
+                    <div className="reveal bg-[#4285F4] rounded-3xl p-8 md:p-12 aspect-[4/5] flex flex-col justify-between shadow-[0_20px_50px_rgba(66,133,244,0.15)] hover:shadow-[0_20px_50px_rgba(66,133,244,0.3)] transition-all duration-500 group relative overflow-hidden">
+                        
+                        {/* Glow effect */}
+                        <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-white/20 blur-[60px] pointer-events-none group-hover:bg-white/30 transition-colors"></div>
+
+                        <div className="flex justify-between items-start relative z-10">
+                            <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center group-hover:rotate-45 transition-transform duration-500">
+                                <Star className="text-white text-2xl" />
+                            </div>
+                            <span className="text-white font-medium text-sm border border-white/20 px-3 py-1 rounded-full bg-white/10">01</span>
+                        </div>
+                        
+                        <div className="relative z-10 mt-auto">
+                            <h3 className="text-4xl md:text-5xl text-white mb-6 leading-none tracking-tight font-serif">
+                                Join <br />Session
+                            </h3>
+                            
+                            <form onSubmit={handleJoin} className="flex flex-col gap-4">
+                              <p className="text-white/80 text-sm md:text-base leading-snug mb-2">
+                                  Your event coordinator will provide a 6-character code.
+                              </p>
+                              <div className="relative">
+                                <input 
+                                  type="text" 
+                                  placeholder="ENTER CODE" 
+                                  maxLength={6} 
+                                  value={code}
+                                  disabled={loading}
+                                  onChange={e => changeCode(e.target.value)}
+                                  className="w-full bg-black/10 border border-white/20 rounded-xl px-5 py-4 text-white placeholder:text-white/40 font-mono text-xl tracking-[0.2em] uppercase focus:outline-none focus:border-white/50 focus:bg-black/20 transition-all"
+                                />
+                                {error && (
+                                  <div className="absolute -bottom-8 left-0 flex items-center gap-1.5 text-[#FFC107] text-xs font-medium bg-black/40 px-2 py-1 rounded-md">
+                                    <Lock size={12} /> {error}
+                                  </div>
+                                )}
+                              </div>
+                              <button 
+                                type="submit" 
+                                disabled={loading || code.length !== 6}
+                                className="w-full mt-4 bg-white text-[#4285F4] font-bold tracking-wide py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:hover:scale-100 transition-all cursor-pointer disabled:cursor-not-allowed"
+                              >
+                                {loading ? <><Activity className="animate-spin" size={18} /> Connecting...</> : <>Enter Arena <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
+                              </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 2 - Black with GDG borders (Host) */}
+                <div className="md:mt-24" style={{ transform: `translateY(${scrolled * -0.05}px)` }}>
+                    <div className="reveal bg-[#111] border border-white/10 rounded-3xl p-8 md:p-12 aspect-[4/5] flex flex-col justify-between shadow-2xl group hover:border-[#EA4335]/50 transition-all duration-500 relative overflow-hidden" style={{ transitionDelay: '150ms' }}>
+                        
+                        <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-[#EA4335]/10 blur-[80px] pointer-events-none group-hover:bg-[#EA4335]/20 transition-colors"></div>
+
+                        <div className="flex justify-between items-start relative z-10">
+                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-white/5">
+                               <ArrowRight className="text-white text-2xl -rotate-45" />
+                            </div>
+                            <span className="text-white/50 font-medium text-sm border border-white/10 px-3 py-1 rounded-full">02</span>
+                        </div>
+                        
+                        <div className="relative z-10 mt-auto">
+                            <h3 className="text-4xl md:text-5xl text-white mb-6 leading-none tracking-tight font-serif">
+                                Host <br />Tournament
+                            </h3>
+                            <p className="text-gray-400 text-sm md:text-base leading-snug mb-8">
+                                AI-powered setup in four guided steps. No technical expertise needed. 
+                            </p>
+                            
+                            <ul className="flex flex-col gap-3 mb-10 text-[13px] text-gray-500">
+                              <li className="flex items-center gap-2.5"><div className="w-1.5 h-1.5 rounded-full bg-[#4285F4]" /> Real-time WebSocket Cluster</li>
+                              <li className="flex items-center gap-2.5"><div className="w-1.5 h-1.5 rounded-full bg-[#EA4335]" /> Fullscreen Anti-Cheat Enforcement</li>
+                              <li className="flex items-center gap-2.5"><div className="w-1.5 h-1.5 rounded-full bg-[#FBBC05]" /> DOCX Question AI Parser</li>
+                              <li className="flex items-center gap-2.5"><div className="w-1.5 h-1.5 rounded-full bg-[#34A853]" /> 5 Interactive Game Modes</li>
+                            </ul>
+
+                            <Link href="/host" className="inline-flex w-full">
+                              <button className="w-full bg-[#1A1A1A] border border-white/10 text-white font-bold tracking-wide py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#252525] hover:border-[#EA4335]/50 hover:text-[#EA4335] transition-all">
+                                Initialize Server <Sparkles size={16} />
+                              </button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {/* Background Pattern */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] opacity-10 pointer-events-none"
+             style={{ backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-20 border-t border-white/5 bg-[#050505] relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+                <div className="w-full md:w-auto">
+                    <h2 className="text-[10vw] md:text-[8vw] leading-[0.8] tracking-tighter text-white/5 font-bold select-none pointer-events-none font-sans">
+                        ARENA.
+                    </h2>
+                </div>
+                
+                <div className="flex flex-col gap-8 text-right">
+                    <div className="flex flex-col gap-4 text-gray-500 text-sm">
+                        <Link href="/host" className="hover:text-white transition-colors">Admin Dashboard</Link>
+                        <Link href="/display" className="hover:text-white transition-colors">Projector Display</Link>
+                        <Link href="/leaderboard" className="hover:text-white transition-colors">Global Leaderboard</Link>
+                    </div>
+                    <p className="text-xs text-gray-700 font-mono uppercase tracking-widest">© 2026 Intelligent Arena. Powered by Google Cloud.</p>
+                </div>
+            </div>
         </div>
       </footer>
     </div>

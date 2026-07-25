@@ -9,25 +9,29 @@ import {
   ChevronRight, Lock, Settings, Plus, Trash2, CheckCircle2,
   ArrowLeft, Layers, Users, Globe, Key, AlertCircle, Copy, Sparkles, ArrowRight, Radio
 } from 'lucide-react';
+import { Inter, Playfair_Display } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const playfair = Playfair_Display({ subsets: ['latin'], style: ['normal', 'italic'], variable: '--font-playfair' });
 
 const ease = [0.25, 0.46, 0.45, 0.94];
 
 const stepMeta = [
-  { label: 'General Info',      accent: '#60a5fa', bg: 'rgba(96,165,250,0.10)',  border: 'rgba(96,165,250,0.22)'  },
-  { label: 'Parameters',        accent: '#a78bfa', bg: 'rgba(167,139,250,0.10)', border: 'rgba(167,139,250,0.22)' },
-  { label: 'Rounds Designer',   accent: '#818cf8', bg: 'rgba(129,140,248,0.10)', border: 'rgba(129,140,248,0.22)' },
-  { label: 'Authorization',     accent: '#34d399', bg: 'rgba(52,211,153,0.10)',  border: 'rgba(52,211,153,0.22)'  },
-  { label: 'Review & Launch',   accent: '#fb923c', bg: 'rgba(251,146,60,0.10)',  border: 'rgba(251,146,60,0.22)'  },
+  { label: 'General Info',      accent: '#4285F4', bg: 'rgba(66,133,244,0.10)',  border: 'rgba(66,133,244,0.22)'  }, // GDG Blue
+  { label: 'Parameters',        accent: '#EA4335', bg: 'rgba(234,67,53,0.10)',   border: 'rgba(234,67,53,0.22)'   }, // GDG Red
+  { label: 'Rounds Designer',   accent: '#FBBC05', bg: 'rgba(251,188,5,0.10)',   border: 'rgba(251,188,5,0.22)'   }, // GDG Yellow
+  { label: 'Authorization',     accent: '#34A853', bg: 'rgba(52,168,83,0.10)',   border: 'rgba(52,168,83,0.22)'   }, // GDG Green
+  { label: 'Review & Launch',   accent: '#4285F4', bg: 'rgba(66,133,244,0.10)',  border: 'rgba(66,133,244,0.22)'  }, // GDG Blue
 ];
 
 // Reusable input / label styles
 const inputCls = `
-  w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/25 
-  focus:outline-none transition-all duration-200
-  bg-white/[0.04] border border-white/[0.09]
-  focus:bg-white/[0.06] focus:border-white/[0.22]
+  w-full px-5 py-4 rounded-xl text-base text-white placeholder:text-white/20 
+  focus:outline-none transition-all duration-300
+  bg-black/30 border border-white/10 backdrop-blur-md shadow-inner
+  focus:bg-black/50 focus:border-[#4285F4]/70 focus:ring-2 focus:ring-[#4285F4]/30
 `;
-const labelCls = "block text-[10.5px] font-semibold tracking-[0.12em] uppercase text-white/45 mb-1.5";
+const labelCls = "block text-[11px] font-bold tracking-[0.15em] uppercase text-white/50 mb-3";
 
 export default function HostSetupWizard() {
   const router = useRouter();
@@ -96,7 +100,12 @@ export default function HostSetupWizard() {
       const res  = await fetch('/api/quiz/create', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData)
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw new Error('Server connection failed. Please ensure the backend is running.');
+      }
       if (!res.ok) throw new Error(data.error || 'Failed to create tournament');
       setCreatedCode(data.quizCode);
       setStep(6);
@@ -117,131 +126,116 @@ export default function HostSetupWizard() {
   const progress = Math.min((step / 5) * 100, 100);
 
   return (
-    <div style={{ background: '#0D0D10', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div className={`min-h-screen bg-[#020202] text-white selection:bg-[#4285F4] selection:text-white ${inter.variable} ${playfair.variable} font-sans flex flex-col relative`}>
+      <style dangerouslySetInnerHTML={{__html: `
+        .font-serif { font-family: var(--font-playfair), serif; }
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.05;
+            mix-blend-mode: overlay;
+            background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+        }
+      `}} />
 
       {/* ── AMBIENT ── */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', left: '-5%', top: '-5%', width: '50vw', height: '60vh', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(63,94,251,0.10) 0%, transparent 65%)', filter: 'blur(80px)' }} />
-        <div style={{ position: 'absolute', right: '-8%', top: '20%', width: '45vw', height: '55vh', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(120,60,220,0.09) 0%, transparent 65%)', filter: 'blur(90px)' }} />
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.022, backgroundImage: 'linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '52px 52px' }} />
+        <div className="noise-overlay" />
+        <div className="absolute top-[10%] left-[10%] w-[50vw] h-[50vw] rounded-full bg-[#4285F4] mix-blend-screen filter blur-[180px] opacity-[0.18]"></div>
+        <div className="absolute bottom-[10%] right-[10%] w-[50vw] h-[50vw] rounded-full bg-[#EA4335] mix-blend-screen filter blur-[180px] opacity-[0.12]"></div>
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
       {/* ── HEADER ── */}
-      <header style={{
-        position: 'relative', zIndex: 20, display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', padding: '14px 28px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(13,13,16,0.82)', backdropFilter: 'blur(24px)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link href="/" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 7,
-            padding: '7px 14px', borderRadius: 99,
-            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
-            fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
-            textDecoration: 'none', letterSpacing: '0.02em', transition: 'all 0.18s'
-          }}>
-            <ArrowLeft size={13} />
+      <header className="relative z-20 flex items-center justify-between px-8 py-5 border-b border-white/10 bg-black/40 backdrop-blur-xl">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all">
+            <ArrowLeft size={14} />
             Portal Home
           </Link>
-          <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.10)' }} className="hidden sm:block" />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em', textTransform: 'uppercase' }} className="hidden sm:flex">
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 8px rgba(129,140,248,0.70)', animation: 'pulse 2s infinite' }} />
+          <div className="w-px h-6 bg-white/10 hidden sm:block" />
+          <div className="hidden sm:flex items-center gap-3 text-[13px] font-bold text-white/60 tracking-widest uppercase">
+            <div className="flex gap-1 items-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#4285F4] shadow-[0_0_8px_#4285F4]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#EA4335] shadow-[0_0_8px_#EA4335]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FBBC05] shadow-[0_0_8px_#FBBC05]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#34A853] shadow-[0_0_8px_#34A853]"></div>
+            </div>
             Tournament Wizard
           </div>
         </div>
 
         {step < 6 && (
-          <div style={{
-            fontSize: 11, fontFamily: 'monospace', fontWeight: 700,
-            padding: '6px 14px', borderRadius: 99,
-            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
-            color: 'rgba(255,255,255,0.55)', letterSpacing: '0.08em'
-          }}>
+          <div className="text-xs font-mono font-bold px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-white/70 tracking-widest shadow-inner">
             PHASE {String(step).padStart(2,'0')} / 05
           </div>
         )}
       </header>
 
       {/* ── MAIN ── */}
-      <main style={{ flex: 1, position: 'relative', zIndex: 10, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px 20px' }}>
-        <div style={{ width: '100%', maxWidth: 740 }}>
+      <main className="flex-1 relative z-10 flex items-start justify-center pt-16 pb-32 px-6">
+        <div className="w-full max-w-[880px]">
 
           {/* ── STEP INDICATOR ── */}
           {step < 6 && (
-            <div style={{ marginBottom: 28 }}>
+            <div className="mb-12">
               {/* Step pills */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 16, overflowX: 'auto' }}>
+              <div className="flex items-center gap-0 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                 {stepMeta.map((s, i) => {
                   const n       = i + 1;
                   const active  = step === n;
                   const done    = step > n;
                   return (
-                    <div key={n} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: '50%',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: done ? 0 : 11.5, fontWeight: 700, fontFamily: 'monospace',
-                          transition: 'all 0.25s',
-                          background: done ? s.bg : active ? '#fff' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${done ? s.border : active ? '#fff' : 'rgba(255,255,255,0.10)'}`,
-                          color: active ? '#0d0d10' : 'rgba(255,255,255,0.30)',
-                          boxShadow: active ? '0 0 16px rgba(255,255,255,0.20)' : done ? `0 0 12px ${s.bg}` : 'none',
-                        }}>
-                          {done ? <CheckCircle2 size={13} style={{ color: s.accent }} /> : n}
+                    <div key={n} className="flex items-center flex-shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 font-mono font-bold text-sm
+                          ${done ? 'bg-white/5 border border-white/10 text-white/50' : 
+                            active ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.4)] scale-110' : 
+                            'bg-transparent border border-white/10 text-white/30'}`}
+                        >
+                          {done ? <CheckCircle2 size={18} /> : n}
                         </div>
-                        <span style={{
-                          fontSize: 11.5, fontWeight: active ? 600 : 500,
-                          color: active ? '#fff' : done ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)',
-                          whiteSpace: 'nowrap', display: 'none'
-                        }} className="md-step-label">
+                        <span className={`text-[13px] tracking-wide whitespace-nowrap transition-all hidden md:block
+                          ${active ? 'font-bold text-white' : done ? 'font-bold text-white/50' : 'font-medium text-white/30'}`}
+                        >
                           {s.label}
                         </span>
                       </div>
-                      {i < 4 && <div style={{ width: 32, height: 1, background: step > n ? `rgba(129,140,248,0.30)` : 'rgba(255,255,255,0.08)', margin: '0 8px', flexShrink: 0 }} />}
+                      {i < 4 && <div className={`w-12 h-px mx-4 flex-shrink-0 ${step > n ? 'bg-white/40 shadow-[0_0_10px_rgba(255,255,255,0.3)]' : 'bg-white/10'}`} />}
                     </div>
                   );
                 })}
-                <style>{`.md-step-label { display: none; } @media (min-width: 520px) { .md-step-label { display: block !important; } }`}</style>
               </div>
 
               {/* Progress bar */}
-              <div style={{ height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.55, ease }}
-                  style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${meta.accent}, rgba(129,140,248,0.80))`, boxShadow: `0 0 10px ${meta.accent}55` }}
+                  transition={{ duration: 0.6, ease }}
+                  className="h-full rounded-full"
+                  style={{ background: meta.accent, boxShadow: `0 0 20px ${meta.accent}` }}
                 />
               </div>
             </div>
           )}
 
           {/* ── FORM CARD ── */}
-          <div style={{
-            borderRadius: 24, overflow: 'hidden',
-            background: 'rgba(255,255,255,0.025)',
-            border: '1px solid rgba(255,255,255,0.09)',
-            backdropFilter: 'blur(32px)',
-            boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)'
-          }}>
-            {/* Card top accent */}
-            <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${meta.accent}55, transparent)` }} />
+          <div className="rounded-[32px] bg-white/[0.04] border border-white/10 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] relative overflow-hidden transition-all duration-500" style={{ borderColor: `${meta.accent}60` }}>
+            
+            {/* Card ambient glow inside */}
+            <div className="absolute top-[-30%] left-[-20%] w-[70%] h-[70%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700" style={{ backgroundColor: `${meta.accent}15` }}></div>
 
-            <div style={{ padding: '32px 36px 36px' }}>
+            <div className="p-6 sm:p-10 md:p-14 relative z-10">
 
               {/* Error banner */}
               <AnimatePresence>
                 {error && (
-                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '12px 16px', borderRadius: 12, marginBottom: 24,
-                      background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.22)',
-                      fontSize: 12.5, color: '#fca5a5'
-                    }}>
-                    <AlertCircle size={15} style={{ color: '#f87171', flexShrink: 0 }} />
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                    className="flex items-center gap-4 px-6 py-5 rounded-2xl mb-10 bg-red-500/10 border border-red-500/30 text-[14px] font-medium text-red-300 shadow-[0_10px_30px_rgba(239,68,68,0.1)]">
+                    <AlertCircle size={20} className="text-red-400 flex-shrink-0" />
                     {error}
                   </motion.div>
                 )}
@@ -251,10 +245,10 @@ export default function HostSetupWizard() {
 
                 {/* ════ STEP 1 ════ */}
                 {step === 1 && (
-                  <motion.div key="s1" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28, ease }}>
-                    <StepHeader n="01" title="General Information" desc="Define the core identity and metadata for your tournament session." accent={meta.accent} bg={meta.bg} border={meta.border} />
+                  <motion.div key="s1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, ease }}>
+                    <StepHeader n="01" title="General Information" desc="Define the core identity and metadata for your tournament session." accent={meta.accent} />
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                    <div className="flex flex-col gap-8">
                       <div>
                         <label className={labelCls}>
                           Tournament Name <span style={{ color: meta.accent }}>*</span>
@@ -276,12 +270,12 @@ export default function HostSetupWizard() {
                       </div>
                       <div>
                         <label className={labelCls}>Organization / Institution <OptTag /></label>
-                        <div style={{ position: 'relative' }}>
-                          <Globe size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.25)' }} />
+                        <div className="relative">
+                          <Globe size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30" />
                           <input type="text" value={formData.organizerName}
                             onChange={e => set('organizerName', e.target.value)}
                             placeholder="e.g. Google Developer Groups"
-                            className={inputCls} style={{ paddingLeft: 38 }}
+                            className={inputCls} style={{ paddingLeft: 54 }}
                           />
                         </div>
                       </div>
@@ -291,61 +285,58 @@ export default function HostSetupWizard() {
 
                 {/* ════ STEP 2 ════ */}
                 {step === 2 && (
-                  <motion.div key="s2" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28, ease }}>
-                    <StepHeader n="02" title="Session Parameters" desc="Configure team structure, scoring mechanics, and session rules." accent={meta.accent} bg={meta.bg} border={meta.border} />
+                  <motion.div key="s2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, ease }}>
+                    <StepHeader n="02" title="Session Parameters" desc="Configure team structure, scoring mechanics, and session rules." accent={meta.accent} />
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                      <ParamCard label="Players Per Team" icon={<Users size={13} style={{ color: '#60a5fa' }} />}>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                      <ParamCard label="Players Per Team" icon={<Users size={18} className="text-[#4285F4]" />}>
+                        <div className="flex gap-3">
                           {[1,2,3,4,5].map(n => (
                             <button key={n} type="button" onClick={() => set('playersPerTeam', n)}
-                              style={{
-                                flex: 1, padding: '10px 0', borderRadius: 10, cursor: 'pointer',
-                                fontFamily: 'monospace', fontSize: 14, fontWeight: 700,
-                                transition: 'all 0.18s',
-                                background: formData.playersPerTeam === n ? 'rgba(96,165,250,0.14)' : 'rgba(255,255,255,0.03)',
-                                border: `1px solid ${formData.playersPerTeam === n ? 'rgba(96,165,250,0.40)' : 'rgba(255,255,255,0.09)'}`,
-                                color: formData.playersPerTeam === n ? '#93c5fd' : 'rgba(255,255,255,0.45)',
-                              }}>{n}</button>
+                              className={`flex-1 py-3.5 rounded-xl font-mono text-[16px] font-bold transition-all shadow-sm ${
+                                formData.playersPerTeam === n 
+                                  ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.4)] scale-[1.02]' 
+                                  : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                              }`}>{n}</button>
                           ))}
                         </div>
                       </ParamCard>
 
-                      <ParamCard label="Max Registered Teams" icon={<Trophy size={13} style={{ color: '#a78bfa' }} />}>
+                      <ParamCard label="Max Registered Teams" icon={<Trophy size={18} className="text-[#EA4335]" />}>
                         <input type="number" min={1} max={500} value={formData.maxTeams}
                           onChange={e => set('maxTeams', parseInt(e.target.value) || 50)}
-                          className={inputCls} style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 700 }}
+                          className={inputCls} style={{ fontFamily: 'monospace', fontSize: 20, fontWeight: 800 }}
                         />
                       </ParamCard>
 
-                      <ParamCard label="Late Team Join" icon={<Shield size={13} style={{ color: '#818cf8' }} />}>
+                      <ParamCard label="Late Team Join" icon={<Shield size={18} className="text-[#FBBC05]" />}>
                         <TogglePair
                           opts={[{ l: 'Allowed', v: true }, { l: 'Locked', v: false }]}
                           value={formData.allowLateJoin} onChange={v => set('allowLateJoin', v)}
-                          activeColor="rgba(129,140,248,0.70)"
+                          activeColor="#FBBC05"
                         />
                       </ParamCard>
 
-                      <ParamCard label="Re-Attempt Sessions" icon={<RefreshCw size={13} style={{ color: '#34d399' }} />}>
+                      <ParamCard label="Re-Attempt Sessions" icon={<RefreshCw size={18} className="text-[#34A853]" />}>
                         <TogglePair
                           opts={[{ l: 'Yes', v: true }, { l: 'No', v: false }]}
                           value={formData.allowReAttempt} onChange={v => set('allowReAttempt', v)}
-                          activeColor="rgba(52,211,153,0.70)"
+                          activeColor="#34A853"
                         />
                       </ParamCard>
 
-                      <ParamCard label="Time Bonus Scoring" icon={<Zap size={13} style={{ color: '#fbbf24' }} />}>
+                      <ParamCard label="Time Bonus Scoring" icon={<Zap size={18} className="text-[#4285F4]" />}>
                         <TogglePair
                           opts={[{ l: 'Active', v: true }, { l: 'Off', v: false }]}
                           value={formData.timeBonusEnabled} onChange={v => set('timeBonusEnabled', v)}
-                          activeColor="rgba(251,191,36,0.70)"
+                          activeColor="#4285F4"
                         />
                       </ParamCard>
 
-                      <ParamCard label="Session Language" icon={<Globe size={13} style={{ color: '#38bdf8' }} />}>
+                      <ParamCard label="Session Language" icon={<Globe size={18} className="text-[#EA4335]" />}>
                         <select value={formData.quizLanguage} onChange={e => set('quizLanguage', e.target.value)}
-                          className={inputCls} style={{ background: '#0d0d10' }}>
+                          className={inputCls} style={{ background: '#111' }}>
                           <option value="en">English (EN)</option>
                           <option value="es">Español (ES)</option>
                           <option value="fr">Français (FR)</option>
@@ -360,63 +351,47 @@ export default function HostSetupWizard() {
 
                 {/* ════ STEP 3 ════ */}
                 {step === 3 && (
-                  <motion.div key="s3" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28, ease }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 24 }}>
-                      <StepHeader n="03" title="Rounds Designer" desc={`Configure up to 5 competitive rounds. ${formData.rounds.length}/5 active.`} accent={meta.accent} bg={meta.bg} border={meta.border} noMargin />
+                  <motion.div key="s3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, ease }}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
+                      <StepHeader n="03" title="Rounds Designer" desc={`Configure up to 5 competitive rounds. ${formData.rounds.length}/5 active.`} accent={meta.accent} noMargin />
                       <button type="button" onClick={addRound}
-                        style={{
-                          flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
-                          padding: '8px 16px', borderRadius: 10, cursor: 'pointer',
-                          fontSize: 11.5, fontWeight: 600, letterSpacing: '0.04em',
-                          background: 'rgba(129,140,248,0.10)', border: '1px solid rgba(129,140,248,0.22)',
-                          color: '#a5b4fc', transition: 'all 0.18s'
-                        }}>
-                        <Plus size={12} />Add Round
+                        className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold tracking-wide bg-white/10 border border-white/20 text-white hover:bg-white text-hover-black hover:text-black transition-all shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                        <Plus size={16} />Add Round
                       </button>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
+                    <div className="flex flex-col gap-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                       {formData.rounds.map((round, idx) => (
-                        <div key={idx} style={{
-                          padding: '18px 20px', borderRadius: 16,
-                          background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)'
-                        }}>
+                        <div key={idx} className="p-5 sm:p-8 rounded-[24px] bg-white/[0.03] border border-white/10 relative overflow-hidden shadow-xl hover:bg-white/[0.05] transition-colors">
                           {/* Round header */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div style={{
-                                width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.25)',
-                                fontSize: 11, fontFamily: 'monospace', fontWeight: 800, color: '#a5b4fc'
-                              }}>{round.roundNumber}</div>
-                              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.02em' }}>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/10 border border-white/20 text-[15px] font-mono font-bold text-white shadow-inner">
+                                {round.roundNumber}
+                              </div>
+                              <span className="text-[16px] font-bold text-white tracking-widest uppercase">
                                 ROUND {String(round.roundNumber).padStart(2,'0')}
                               </span>
                             </div>
                             <button type="button" onClick={() => removeRound(idx)}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
-                                borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 500,
-                                background: 'transparent', border: '1px solid rgba(239,68,68,0.15)',
-                                color: 'rgba(239,68,68,0.55)', transition: 'all 0.18s'
-                              }}>
-                              <Trash2 size={11} />Remove
+                              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all">
+                              <Trash2 size={16} />Remove
                             </button>
                           </div>
 
                           {/* Round fields */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-                            <div style={{ gridColumn: 'span 2' }}>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2">
                               <label className={labelCls}>Round Title</label>
                               <input type="text" value={round.roundName}
                                 onChange={e => updateRound(idx, 'roundName', e.target.value)}
-                                className={inputCls} style={{ fontSize: 13 }}
+                                className={inputCls}
                               />
                             </div>
                             <div>
                               <label className={labelCls}>Question Type</label>
                               <select value={round.questionType} onChange={e => updateRound(idx, 'questionType', e.target.value)}
-                                className={inputCls} style={{ background: '#0d0d10' }}>
+                                className={inputCls} style={{ background: '#111' }}>
                                 <option value="mcq">MCQ — Standard</option>
                                 <option value="match">Match Pairs</option>
                                 <option value="emoji">Emoji Clues</option>
@@ -424,19 +399,21 @@ export default function HostSetupWizard() {
                                 <option value="mix">Mix — All Types</option>
                               </select>
                             </div>
-                            <div>
-                              <label className={labelCls}>Questions (5–30)</label>
-                              <input type="number" min={5} max={30} value={round.questionCount}
-                                onChange={e => updateRound(idx, 'questionCount', parseInt(e.target.value) || 5)}
-                                className={inputCls} style={{ fontFamily: 'monospace', fontWeight: 700 }}
-                              />
-                            </div>
-                            <div>
-                              <label className={labelCls}>Time Limit</label>
-                              <select value={round.timeLimitSeconds / 60} onChange={e => updateRound(idx, 'timeLimitSeconds', parseInt(e.target.value) * 60)}
-                                className={inputCls} style={{ background: '#0d0d10' }}>
-                                {[5,10,15,20,25,30].map(m => <option key={m} value={m}>{m} min</option>)}
-                              </select>
+                            <div className="flex flex-col sm:flex-row gap-5">
+                              <div className="flex-1">
+                                <label className={labelCls}>Questions</label>
+                                <input type="number" min={5} max={30} value={round.questionCount}
+                                  onChange={e => updateRound(idx, 'questionCount', parseInt(e.target.value) || 5)}
+                                  className={inputCls} style={{ fontFamily: 'monospace', fontWeight: 800 }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <label className={labelCls}>Time Limit</label>
+                                <select value={round.timeLimitSeconds / 60} onChange={e => updateRound(idx, 'timeLimitSeconds', parseInt(e.target.value) * 60)}
+                                  className={inputCls} style={{ background: '#111' }}>
+                                  {[5,10,15,20,25,30].map(m => <option key={m} value={m}>{m} min</option>)}
+                                </select>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -447,18 +424,13 @@ export default function HostSetupWizard() {
 
                 {/* ════ STEP 4 ════ */}
                 {step === 4 && (
-                  <motion.div key="s4" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28, ease }}>
-                    <StepHeader n="04" title="Authorization" desc="Set an organizer password to control live sessions and question payloads." accent={meta.accent} bg={meta.bg} border={meta.border} />
+                  <motion.div key="s4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, ease }}>
+                    <StepHeader n="04" title="Authorization" desc="Set an organizer password to control live sessions and question payloads." accent={meta.accent} />
 
-                    <div style={{ maxWidth: 440, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <div style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12,
-                        padding: '14px 16px', borderRadius: 14,
-                        background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.16)',
-                        marginBottom: 6
-                      }}>
-                        <Lock size={16} style={{ color: '#34d399', flexShrink: 0, marginTop: 1 }} />
-                        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.58)', lineHeight: 1.65, margin: 0 }}>
+                    <div className="max-w-[550px] flex flex-col gap-8">
+                      <div className="flex items-start gap-5 p-6 rounded-[20px] bg-[#34A853]/10 border border-[#34A853]/30 mb-2 shadow-[inset_0_1px_1px_rgba(52,168,83,0.2)]">
+                        <Lock size={24} className="text-[#34A853] mt-1 flex-shrink-0" />
+                        <p className="text-[15px] font-medium text-white/80 leading-relaxed m-0">
                           This password is required to manage the live session, upload questions,
                           and enforce participant controls during the tournament.
                         </p>
@@ -468,7 +440,7 @@ export default function HostSetupWizard() {
                         <input type="password" value={formData.organizerPassword}
                           onChange={e => { set('organizerPassword', e.target.value); setError(''); }}
                           placeholder="••••••••••••"
-                          className={inputCls} style={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}
+                          className={inputCls} style={{ fontFamily: 'monospace', letterSpacing: '0.25em', fontSize: '20px' }}
                           autoFocus
                         />
                       </div>
@@ -477,7 +449,7 @@ export default function HostSetupWizard() {
                         <input type="password" value={formData.confirmPassword}
                           onChange={e => { set('confirmPassword', e.target.value); setError(''); }}
                           placeholder="••••••••••••"
-                          className={inputCls} style={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}
+                          className={inputCls} style={{ fontFamily: 'monospace', letterSpacing: '0.25em', fontSize: '20px' }}
                         />
                       </div>
                     </div>
@@ -486,11 +458,11 @@ export default function HostSetupWizard() {
 
                 {/* ════ STEP 5 — REVIEW ════ */}
                 {step === 5 && (
-                  <motion.div key="s5" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28, ease }}>
-                    <StepHeader n="05" title="Review & Launch" desc="Verify your configuration before generating the live tournament cluster." accent={meta.accent} bg={meta.bg} border={meta.border} />
+                  <motion.div key="s5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, ease }}>
+                    <StepHeader n="05" title="Review & Launch" desc="Verify your configuration before generating the live tournament cluster." accent={meta.accent} />
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    <div className="flex flex-col gap-6 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                         {[
                           { k: 'Tournament',  v: formData.quizName },
                           { k: 'Organizer',   v: formData.organizerName || 'Anonymous' },
@@ -499,27 +471,29 @@ export default function HostSetupWizard() {
                           { k: 'Language',    v: formData.quizLanguage.toUpperCase() },
                           { k: 'Rounds',      v: `${formData.rounds.length} configured` },
                         ].map((item, i) => (
-                          <div key={i} style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                            <div style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 4 }}>{item.k}</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.v}</div>
+                          <div key={i} className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 shadow-lg backdrop-blur-sm">
+                            <div className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-2">{item.k}</div>
+                            <div className="text-[16px] font-bold text-white overflow-hidden text-ellipsis whitespace-nowrap">{item.v}</div>
                           </div>
                         ))}
                       </div>
 
-                      <div style={{ padding: '16px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Layers size={12} style={{ color: '#818cf8' }} />Rounds Configuration
+                      <div className="p-5 sm:p-7 rounded-[24px] bg-white/[0.03] border border-white/10 mt-3 shadow-xl">
+                        <div className="text-[13px] font-bold text-white/60 uppercase tracking-widest mb-6 flex items-center gap-3">
+                          <Layers size={18} className="text-[#4285F4]" />Rounds Configuration
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div className="flex flex-col gap-4">
                           {formData.rounds.map((r, i) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', fontSize: 12 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <span style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(129,140,248,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, fontFamily: 'monospace', color: '#a5b4fc' }}>{r.roundNumber}</span>
-                                <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.80)' }}>{r.roundName}</span>
+                            <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl bg-white/5 border border-white/10 gap-4 sm:gap-0">
+                              <div className="flex items-center gap-4">
+                                <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-[13px] font-bold font-mono text-white/90 shadow-inner">{r.roundNumber}</span>
+                                <span className="font-bold text-[16px] text-white tracking-wide">{r.roundName}</span>
                               </div>
-                              <div style={{ display: 'flex', gap: 14, fontSize: 11, color: 'rgba(255,255,255,0.40)' }}>
+                              <div className="flex items-center gap-5 text-[13px] font-bold text-white/50 bg-black/20 px-4 py-2 rounded-lg border border-white/5">
                                 <span>{r.questionCount}Q</span>
-                                <span style={{ color: '#818cf8', fontWeight: 700, textTransform: 'uppercase' }}>{r.questionType}</span>
+                                <span className="w-1 h-1 rounded-full bg-white/20"></span>
+                                <span className="text-[#FBBC05] uppercase tracking-widest">{r.questionType}</span>
+                                <span className="w-1 h-1 rounded-full bg-white/20"></span>
                                 <span>{r.timeLimitSeconds/60}m</span>
                               </div>
                             </div>
@@ -532,63 +506,36 @@ export default function HostSetupWizard() {
 
                 {/* ════ STEP 6 — SUCCESS ════ */}
                 {step === 6 && (
-                  <motion.div key="s6" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.45, ease }}
-                    style={{ textAlign: 'center', padding: '8px 0' }}>
+                  <motion.div key="s6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease }}
+                    className="text-center py-6">
 
-                    <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.28)', boxShadow: '0 0 32px rgba(52,211,153,0.18)' }}>
-                      <CheckCircle2 size={28} style={{ color: '#34d399' }} />
+                    <div className="w-24 h-24 mx-auto mb-8 rounded-[24px] flex items-center justify-center bg-[#34A853]/20 border border-[#34A853]/40 shadow-[0_0_60px_rgba(52,168,83,0.3)]">
+                      <CheckCircle2 size={44} className="text-[#34A853]" />
                     </div>
 
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(52,211,153,0.80)', textTransform: 'uppercase', marginBottom: 10 }}>Tournament Created</div>
-                    <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff', marginBottom: 8 }}>Your arena is live</h2>
-                    <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.42)', lineHeight: 1.65, maxWidth: 360, margin: '0 auto 28px' }}>
+                    <div className="text-[13px] font-bold tracking-[0.25em] text-[#34A853] uppercase mb-4">Tournament Created</div>
+                    <h2 className="text-5xl font-serif mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">Your arena is live</h2>
+                    <p className="text-base text-white/50 leading-relaxed max-w-[440px] mx-auto mb-12">
                       Share the access code below with participants. They can join instantly from the home portal.
                     </p>
 
                     {/* Code display */}
-                    <div style={{ position: 'relative', maxWidth: 320, margin: '0 auto 24px', padding: '24px', borderRadius: 20, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 16px 48px rgba(0,0,0,0.45)' }}>
-                      <div style={{ fontSize: 9.5, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', marginBottom: 10 }}>Access Code</div>
-                      <div style={{ fontFamily: 'monospace', fontSize: 42, fontWeight: 900, letterSpacing: '0.20em', color: '#fff', marginBottom: 18 }}>
+                    <div className="relative max-w-[460px] mx-auto mb-12 p-10 rounded-[32px] bg-white/[0.04] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md">
+                      <div className="text-[11px] font-mono font-bold tracking-[0.25em] text-white/40 uppercase mb-5">Access Code</div>
+                      <div className="font-mono text-4xl md:text-6xl font-black tracking-[0.25em] text-white mb-8 drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] break-all">
                         {createdCode}
                       </div>
-                      <button onClick={copyCode} style={{
-                        display: 'flex', alignItems: 'center', gap: 7, margin: '0 auto',
-                        padding: '9px 18px', borderRadius: 10, cursor: 'pointer',
-                        fontSize: 12, fontWeight: 600, transition: 'all 0.20s',
-                        background: copied ? 'rgba(52,211,153,0.14)' : 'rgba(255,255,255,0.07)',
-                        border: `1px solid ${copied ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.12)'}`,
-                        color: copied ? '#34d399' : 'rgba(255,255,255,0.70)'
-                      }}>
-                        {copied ? <CheckCircle2 size={13} /> : <Copy size={13} />}
+                      <button onClick={copyCode} className={`flex items-center gap-3 mx-auto px-6 py-3 rounded-xl font-bold text-[15px] transition-all ${
+                        copied ? 'bg-[#34A853]/20 border border-[#34A853]/50 text-[#34A853] shadow-[0_0_20px_rgba(52,168,83,0.3)]' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]'
+                      }`}>
+                        {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
                         {copied ? 'Copied!' : 'Copy Access Code'}
                       </button>
                     </div>
 
-                    {/* Next steps */}
-                    <div style={{ maxWidth: 360, margin: '0 auto 28px', textAlign: 'left', padding: '16px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 12 }}>Next Steps</div>
-                      {[
-                        `Share code ${createdCode} with participants to join.`,
-                        'Go to the question loader to import your content.',
-                        'Use your password to manage live rounds from the host panel.',
-                      ].map((t, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: i < 2 ? 9 : 0 }}>
-                          <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(129,140,248,0.14)', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 9.5, fontWeight: 800, fontFamily: 'monospace', color: '#a5b4fc' }}>{i+1}</div>
-                          <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.52)', lineHeight: 1.55 }}>{t}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button onClick={() => router.push(`/host/${createdCode}/questions`)} style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 9,
-                      padding: '13px 28px', borderRadius: 14, cursor: 'pointer',
-                      fontSize: 14, fontWeight: 700, letterSpacing: '0.01em',
-                      background: 'linear-gradient(135deg, #fff 0%, #e8eaf0 100%)',
-                      color: '#0d0d10', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-                      transition: 'all 0.2s'
-                    }}>
+                    <button onClick={() => router.push(`/host/${createdCode}/questions`)} className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-[16px] bg-white text-black hover:scale-105 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.2)]">
                       <span>Load Question Payload</span>
-                      <ArrowRight size={16} />
+                      <ArrowRight size={20} />
                     </button>
                   </motion.div>
                 )}
@@ -596,41 +543,22 @@ export default function HostSetupWizard() {
 
               {/* ── NAV BUTTONS ── */}
               {step < 6 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-14 pt-10 border-t border-white/10 gap-4 sm:gap-0">
                   <button type="button" onClick={() => { setError(''); setStep(s => s - 1); }}
                     disabled={step === 1}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 7,
-                      padding: '10px 20px', borderRadius: 12, cursor: step === 1 ? 'not-allowed' : 'pointer',
-                      fontSize: 13, fontWeight: 600, transition: 'all 0.18s',
-                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
-                      color: step === 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.60)',
-                      opacity: step === 1 ? 0 : 1,
-                    }}>
-                    <ArrowLeft size={13} />Back
+                    className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[15px] font-bold transition-all ${
+                      step === 1 ? 'opacity-0 pointer-events-none hidden sm:flex' : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                    }`}>
+                    <ArrowLeft size={18} />Back
                   </button>
 
                   {step < 5 ? (
-                    <button type="button" onClick={nextStep} style={{
-                      display: 'flex', alignItems: 'center', gap: 7,
-                      padding: '11px 24px', borderRadius: 12, cursor: 'pointer',
-                      fontSize: 13.5, fontWeight: 700, transition: 'all 0.2s',
-                      background: 'linear-gradient(135deg, #fff, #e8eaf0)',
-                      color: '#0d0d10', border: 'none', boxShadow: '0 6px 20px rgba(0,0,0,0.32)'
-                    }}>
-                      <span>Continue</span><ChevronRight size={15} />
+                    <button type="button" onClick={nextStep} className="flex items-center justify-center gap-3 px-10 py-4 rounded-xl text-[15px] font-bold bg-white text-black hover:scale-105 transition-all shadow-[0_15px_30px_rgba(255,255,255,0.15)]">
+                      <span>Continue</span><ChevronRight size={18} />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleCreateQuiz} disabled={loading} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '11px 24px', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
-                      fontSize: 13.5, fontWeight: 700, transition: 'all 0.2s',
-                      background: 'linear-gradient(135deg, rgba(129,140,248,0.25), rgba(167,139,250,0.20))',
-                      border: '1px solid rgba(129,140,248,0.35)', color: 'rgba(210,205,255,0.95)',
-                      boxShadow: '0 4px 18px rgba(99,102,241,0.22)',
-                      opacity: loading ? 0.6 : 1
-                    }}>
-                      {loading ? <><RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />Creating...</> : <><Sparkles size={14} style={{ color: '#a5b4fc' }} />Create Tournament</>}
+                    <button type="button" onClick={handleCreateQuiz} disabled={loading} className="flex items-center justify-center gap-3 px-10 py-4 rounded-xl text-[15px] font-bold bg-[#4285F4] text-white hover:bg-[#3b78e7] transition-all shadow-[0_15px_40px_rgba(66,133,244,0.4)] disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                      {loading ? <><RefreshCw size={18} className="animate-spin" />Creating...</> : <><Sparkles size={18} />Create Tournament</>}
                     </button>
                   )}
                 </div>
@@ -642,52 +570,49 @@ export default function HostSetupWizard() {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer style={{
-        position: 'relative', zIndex: 20, textAlign: 'center',
-        padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)',
-        background: 'rgba(13,13,16,0.85)', backdropFilter: 'blur(20px)',
-        fontSize: 10.5, fontFamily: 'monospace', color: 'rgba(255,255,255,0.20)',
-        letterSpacing: '0.10em', textTransform: 'uppercase'
-      }}>
-        Intelligent Arena · Global Edition · Multi-Tenant WebSocket Architecture
+      <footer className="relative z-20 text-center p-8 border-t border-white/10 bg-black/40 backdrop-blur-xl">
+        <span className="text-[11px] font-mono font-bold text-white/30 tracking-[0.2em] uppercase">
+          Intelligent Arena · Global Edition · Powered by Google Cloud
+        </span>
       </footer>
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; border: 2px solid rgba(0,0,0,0); background-clip: padding-box; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.3); }
+      `}</style>
     </div>
   );
 }
 
 // ─── Sub-components ───
 
-function StepHeader({ n, title, desc, accent, bg, border, noMargin }) {
+function StepHeader({ n, title, desc, accent }) {
   return (
-    <div style={{ marginBottom: noMargin ? 0 : 24 }}>
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 7,
-        padding: '4px 12px', borderRadius: 99, marginBottom: 12,
-        background: bg, border: `1px solid ${border}`,
-        fontSize: 10, fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.14em',
-        color: accent, textTransform: 'uppercase'
-      }}>
-        <Radio size={10} style={{ color: accent }} />
+    <div className="mb-10">
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-5 text-[12px] font-bold font-mono tracking-widest uppercase border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]" style={{ color: accent, backgroundColor: `${accent}15`, borderColor: `${accent}30` }}>
+        <Radio size={14} />
         PHASE {n}
       </div>
-      <h3 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.015em', color: '#fff', marginBottom: 6 }}>{title}</h3>
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', lineHeight: 1.60 }}>{desc}</p>
+      <h3 className="text-3xl md:text-5xl font-serif text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 mb-4 tracking-tight pb-1">{title}</h3>
+      <p className="text-sm md:text-base text-white/50 leading-relaxed max-w-[500px]">{desc}</p>
     </div>
   );
 }
 
 function OptTag({ text = 'OPTIONAL' }) {
-  return <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.08em', marginLeft: 6 }}>({text})</span>;
+  return <span className="text-[10px] font-bold text-white/30 tracking-[0.15em] ml-2 bg-white/5 px-2 py-1 rounded-md">({text})</span>;
 }
 
 function ParamCard({ label, icon, children }) {
   return (
-    <div style={{ padding: '16px 18px', borderRadius: 16, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <label style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.10em', color: 'rgba(255,255,255,0.42)', textTransform: 'uppercase' }}>{label}</label>
-        {icon}
+    <div className="p-6 rounded-[20px] bg-white/[0.03] hover:bg-white/[0.06] transition-colors border border-white/10 hover:border-white/20 shadow-lg">
+      <div className="flex items-center justify-between mb-5">
+        <label className="text-[11px] font-bold tracking-[0.15em] text-white/50 uppercase">{label}</label>
+        <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+          {icon}
+        </div>
       </div>
       {children}
     </div>
@@ -696,15 +621,15 @@ function ParamCard({ label, icon, children }) {
 
 function TogglePair({ opts, value, onChange, activeColor }) {
   return (
-    <div style={{ display: 'flex', gap: 8 }}>
+    <div className="flex gap-3">
       {opts.map(o => (
-        <button key={String(o.v)} type="button" onClick={() => onChange(o.v)} style={{
-          flex: 1, padding: '10px 0', borderRadius: 10, cursor: 'pointer',
-          fontSize: 12, fontWeight: 600, transition: 'all 0.18s',
-          background: value === o.v ? `${activeColor}22` : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${value === o.v ? activeColor : 'rgba(255,255,255,0.09)'}`,
-          color: value === o.v ? activeColor : 'rgba(255,255,255,0.40)',
-        }}>{o.l}</button>
+        <button key={String(o.v)} type="button" onClick={() => onChange(o.v)} className="flex-1 py-3.5 rounded-xl text-[14px] font-bold transition-all shadow-sm"
+          style={{
+            backgroundColor: value === o.v ? `${activeColor}20` : 'rgba(255,255,255,0.03)',
+            borderColor: value === o.v ? activeColor : 'rgba(255,255,255,0.1)',
+            color: value === o.v ? activeColor : 'rgba(255,255,255,0.4)',
+            boxShadow: value === o.v ? `0 0 15px ${activeColor}40` : 'none'
+          }}>{o.l}</button>
       ))}
     </div>
   );

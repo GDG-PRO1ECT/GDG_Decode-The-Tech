@@ -76,8 +76,8 @@ export default function QuizClient({ quizName }) {
           <div className="flex items-center gap-4">
             <GdgLogo className="w-12 h-12 animate-holo-flicker drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
             <div className="flex flex-col">
-              <span className="font-display font-black tracking-[0.3em] text-white text-base leading-tight">GDG_CORE</span>
-              <span className="font-mono text-xs text-gdg-blue tracking-[0.4em] uppercase">{quizName ? quizName.toUpperCase() : "QUIZ PLATFORM"}</span>
+              <span className="font-display font-black tracking-[0.3em] text-white text-sm sm:text-base leading-tight">GDG_CORE</span>
+              <span className="font-mono text-[10px] sm:text-xs text-gdg-blue tracking-[0.3em] sm:tracking-[0.4em] uppercase truncate max-w-[120px] sm:max-w-xs">{quizName ? quizName.toUpperCase() : "QUIZ PLATFORM"}</span>
             </div>
           </div>
           <div className="flex gap-4">
@@ -165,7 +165,7 @@ export default function QuizClient({ quizName }) {
                         <input
                           type="text" placeholder="ID: TM-001" value={teamId} onChange={e => setTeamId(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && teamId && (router.push(`/quiz/${quizCode}/team/${teamId}`))}
-                          className="w-full bg-transparent border-b border-white/20 px-6 py-4 text-white font-mono text-2xl tracking-[0.2em] focus:border-gdg-blue outline-none transition-all placeholder:text-gray-700"
+                          className="w-full bg-transparent border-b border-white/20 px-4 sm:px-6 py-4 text-white font-mono text-xl sm:text-2xl tracking-[0.2em] focus:border-gdg-blue outline-none transition-all placeholder:text-gray-700"
                         />
                       </div>
                       
