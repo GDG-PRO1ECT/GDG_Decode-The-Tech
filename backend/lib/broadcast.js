@@ -61,10 +61,17 @@ export async function broadcastUpdate(quizCode) {
       if (!global.gameCache) global.gameCache = {};
       global.gameCache[quizCode] = { session, leaderboard };
 
-      // Broadcast
+      // Broadcast session universally
       global.io.to(`quiz_${quizCode}`).emit('session_update', session);
-      global.io.to(`quiz_${quizCode}`).emit('leaderboard_update', leaderboard);
+      
+      // Send top 20 to the public display board
       global.io.to(`display_board_${quizCode}`).emit('leaderboard_update', leaderboard.slice(0, 20));
+
+      // Send personalized 'diet' leaderboard (top 8 + own team) to individual team rooms
+      // This reduces bandwidth from O(N^2) to O(N) where N is number of teams
+      leaderboard.forEach(team => {
+        global.io.to(`team_${team.teamId}`).emit('leaderboard_update', getDietLeaderboard(leaderboard, team.teamId));
+      });
     } catch (err) {
       console.error('Broadcast update error:', err);
     }
