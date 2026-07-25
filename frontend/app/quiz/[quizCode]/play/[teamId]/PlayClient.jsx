@@ -100,7 +100,7 @@ function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
               const paired = isPaired('left', item);
               const color = getPairedColor('left', item);
               return (
-                <motion.button
+                <motion.button title="Select this source item for matching"
                   key={i}
                   whileHover={{ scale: 1.02, x: 5 }}
                   onClick={() => handleLeftClick(item)}
@@ -130,7 +130,7 @@ function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
               const paired = isPaired('right', item);
               const color = getPairedColor('right', item);
               return (
-                <motion.button
+                <motion.button title="Match with this destination item"
                   key={i}
                   whileHover={{ scale: 1.02, x: -5 }}
                   onClick={() => handleRightClick(item)}
@@ -159,7 +159,7 @@ function MatchInterface({ data, onComplete, isSubmitting, accentColor }) {
         </div>
       </div>
 
-      <motion.button
+      <motion.button title="Submit your matched pairs"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: allPaired ? 1 : 0.3, y: 0, scale: allPaired ? 1 : 0.98 }}
         disabled={!allPaired || isSubmitting}
@@ -458,7 +458,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                 ? 'Your connection has been severed due to a security violation (exiting full-screen or background navigation). This unit is no longer authorized to attend questions.'
                 : `Your team failed to meet the cycle threshold for Phase 0${team?.eliminatedAtRound || 1}. Access to subsequent levels has been revoked.`}
             </p>
-            <motion.button 
+            <motion.button title="Return to your team dashboard"
               whileHover={{ scale: 1.05 }} 
               whileTap={{ scale: 0.95 }}
               onClick={() => router.push(`/quiz/${quizCode}/team/${teamId}`)} 
@@ -490,7 +490,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#00F0FF] to-transparent" />
             <h1 className="font-display font-black text-4xl md:text-5xl text-white mb-6 tracking-[0.2em] uppercase">Secure Terminal</h1>
             <p className="text-lg md:text-xl text-[#00F0FF]/70 font-mono tracking-widest mb-12 uppercase">Focal Control Validation Required</p>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={enterFullscreen} className="relative group w-full py-6 flex items-center justify-center gap-4 bg-[#00F0FF]/10 border border-[#00F0FF]/50 text-[#00F0FF] font-display font-black text-xl md:text-2xl tracking-[0.3em] uppercase overflow-hidden transition-all shadow-[inset_0_0_20px_rgba(0,240,255,0.2)] hover:bg-[#00F0FF] hover:text-black clip-slant">
+            <motion.button title="Enter full screen to begin the phase" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={enterFullscreen} className="relative group w-full py-6 flex items-center justify-center gap-4 bg-[#00F0FF]/10 border border-[#00F0FF]/50 text-[#00F0FF] font-display font-black text-xl md:text-2xl tracking-[0.3em] uppercase overflow-hidden transition-all shadow-[inset_0_0_20px_rgba(0,240,255,0.2)] hover:bg-[#00F0FF] hover:text-black clip-slant">
               <Unlock size={24} className="relative z-10" />
               <span className="relative z-10">Grant Access</span>
             </motion.button>
@@ -571,7 +571,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                <div className="bg-[#000]/40 border border-[#00FF66]/20 rounded-[30px] p-12 backdrop-blur-3xl text-center max-w-xl w-full">
                  <CheckCircle2 className="w-14 h-14 mx-auto mb-6 text-[#00FF66]" />
                  <h2 className="font-display font-light text-4xl text-[#00FF66] mb-4 uppercase">Phase Secured</h2>
-                 <button onClick={() => {
+                 <button title="Proceed to the next section" onClick={() => {
                    if (round === 3) router.push(`/quiz/${quizCode}/leaderboard`);
                    else router.push(`/quiz/${quizCode}/team/${teamId}`);
                  }} className="mt-8 px-10 py-4 border border-[#00FF66]/40 text-[#00FF66] hover:bg-[#00FF66]/10 font-mono text-xs tracking-[0.2em] uppercase rounded-full transition-colors">
@@ -642,7 +642,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                        <div className="w-full flex flex-col items-center gap-8 bg-black/40 p-8 rounded-3xl border border-white/5 shadow-2xl">
                           <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
                             {currentQ.options?.map((opt, i) => (
-                              <motion.button
+                              <motion.button title="Select this option as your answer"
                                 key={i}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -670,7 +670,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                             ))}
                           </div>
                           
-                          <motion.button
+                          <motion.button title="Submit your selected answer"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: selectedAnswer ? 1 : 0, y: selectedAnswer ? 0 : 10 }}
                             disabled={!selectedAnswer || submitting}

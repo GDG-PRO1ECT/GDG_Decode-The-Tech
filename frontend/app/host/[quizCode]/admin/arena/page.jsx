@@ -82,7 +82,7 @@ export default function AdminArenaPage() {
             const c = ROUND_COLORS[r];
             const active = filterRound === r;
             return (
-              <button key={r} onClick={() => setFilterRound(active ? 0 : r)}
+              <button title="Filter questions by this phase" key={r} onClick={() => setFilterRound(active ? 0 : r)}
                 className={`glass-panel p-6 rounded-[2rem] text-center transition-all border ${active ? `${c.border} ${c.bg} scale-[1.02] shadow-[0_0_30px_rgba(0,0,0,0.3)]` : 'border-white/5 hover:border-white/20'}`}>
                 <div className={`font-display font-black text-5xl mb-2 ${active ? c.text : 'text-white'}`}>{counts[r]}</div>
                 <div className="font-mono text-[10px] text-gray-400 tracking-[0.3em] uppercase">PHASE 0{r}</div>
@@ -131,7 +131,7 @@ export default function AdminArenaPage() {
                   className={`glass-panel rounded-[2rem] border-l-4 overflow-hidden transition-all ${c.border} ${isExpanded ? 'shadow-[0_0_40px_rgba(0,0,0,0.4)]' : ''}`}>
 
                   {/* Question header — always visible */}
-                  <button
+                  <button title="Toggle question details"
                     onClick={() => setExpandedId(isExpanded ? null : q._id)}
                     className="w-full text-left p-6 flex items-start gap-6 hover:bg-white/[0.02] transition-colors"
                   >

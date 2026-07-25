@@ -48,8 +48,8 @@ export default function AdminSharePage() {
           <Link href={`/host/${quizCode}/admin`} className="font-mono text-xs text-white/40 hover:text-neon-cyan">← ADMIN</Link>
           <div className="font-display font-bold text-neon-cyan tracking-widest">🔗 TEAM LINKS</div>
           <div className="flex gap-3">
-            <button onClick={copyAll} className="btn-neon text-xs px-4 py-2">📋 COPY ALL</button>
-            <button onClick={exportLinks} className="btn-neon text-xs px-4 py-2">⬇ EXPORT CSV</button>
+            <button title="Copy all team links to clipboard" onClick={copyAll} className="btn-neon text-xs px-4 py-2">📋 COPY ALL</button>
+            <button title="Download team links as a CSV file" onClick={exportLinks} className="btn-neon text-xs px-4 py-2">⬇ EXPORT CSV</button>
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function AdminSharePage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button
+                    <button title="Copy link for this specific team"
                       onClick={() => copy(`${baseUrl}/quiz/${quizCode}/team/${team.teamId}`, team.teamId)}
                       className={`font-mono text-xs px-3 py-1 border transition-colors ${copied === team.teamId ? 'border-neon-green text-neon-green' : 'border-neon-cyan/30 text-neon-cyan/60 hover:border-neon-cyan hover:text-neon-cyan'}`}
                     >

@@ -143,10 +143,10 @@ export default function QuizClient({ quizName }) {
               
               {/* Internal Tabs */}
               <div className="flex gap-4 mb-10 border-b border-white/5 pb-4">
-                <button onClick={() => setActiveTab('join')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'join' ? 'bg-gdg-blue/20 text-white border-b-2 border-gdg-blue shadow-[0_0_20px_rgba(66,133,244,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
+                <button title="Switch to the join tournament tab" onClick={() => setActiveTab('join')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'join' ? 'bg-gdg-blue/20 text-white border-b-2 border-gdg-blue shadow-[0_0_20px_rgba(66,133,244,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
                   {activeTab === 'join' && <span className="text-gdg-blue mr-2">►</span>}UPLINK
                 </button>
-                <button onClick={() => setActiveTab('register')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'register' ? 'bg-gdg-yellow/20 text-white border-b-2 border-gdg-yellow shadow-[0_0_20px_rgba(251,188,5,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
+                <button title="Switch to the register new team tab" onClick={() => setActiveTab('register')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'register' ? 'bg-gdg-yellow/20 text-white border-b-2 border-gdg-yellow shadow-[0_0_20px_rgba(251,188,5,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
                   {activeTab === 'register' && <span className="text-gdg-yellow mr-2">►</span>}NEW_NODE
                 </button>
               </div>
@@ -162,14 +162,14 @@ export default function QuizClient({ quizName }) {
                       
                       <div className="relative">
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-10 bg-gdg-blue"></div>
-                        <input
+                        <input title="Enter the tournament access code"
                           type="text" placeholder="ID: TM-001" value={teamId} onChange={e => setTeamId(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && teamId && (router.push(`/quiz/${quizCode}/team/${teamId}`))}
                           className="w-full bg-transparent border-b border-white/20 px-4 sm:px-6 py-4 text-white font-mono text-xl sm:text-2xl tracking-[0.2em] focus:border-gdg-blue outline-none transition-all placeholder:text-gray-700"
                         />
                       </div>
                       
-                      <button onClick={() => teamId && (router.push(`/quiz/${quizCode}/team/${teamId}`))} className="clip-angled-br w-full bg-gdg-blue/20 hover:bg-gdg-blue text-white border border-gdg-blue py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all shadow-[0_0_20px_rgba(66,133,244,0.3)] hover:shadow-[0_0_40px_rgba(66,133,244,0.6)] mt-auto">
+                      <button title="Connect to the tournament with this code" onClick={() => teamId && (router.push(`/quiz/${quizCode}/team/${teamId}`))} className="clip-angled-br w-full bg-gdg-blue/20 hover:bg-gdg-blue text-white border border-gdg-blue py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all shadow-[0_0_20px_rgba(66,133,244,0.3)] hover:shadow-[0_0_40px_rgba(66,133,244,0.6)] mt-auto">
                         INITIATE CONNECTION
                       </button>
                     </motion.div>
@@ -187,7 +187,7 @@ export default function QuizClient({ quizName }) {
                         
                         <div className="space-y-1">
                           <label className="font-mono text-xs text-gray-500 tracking-[0.3em] uppercase">Designation</label>
-                          <input required type="text" placeholder="CYBER_SQUAD" value={regForm.teamName} onChange={e => setRegForm({...regForm, teamName: e.target.value})} className="w-full bg-dark-800/50 border border-white/10 px-4 py-3 text-white font-mono text-sm focus:border-gdg-yellow outline-none transition-colors" />
+                          <input title="Enter your team's alias" required type="text" placeholder="CYBER_SQUAD" value={regForm.teamName} onChange={e => setRegForm({...regForm, teamName: e.target.value})} className="w-full bg-dark-800/50 border border-white/10 px-4 py-3 text-white font-mono text-sm focus:border-gdg-yellow outline-none transition-colors" />
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="w-2 h-2 rounded-full bg-gdg-yellow/50 animate-pulse" />
@@ -199,12 +199,12 @@ export default function QuizClient({ quizName }) {
                           {[0, 1, 2].map(idx => (
                             <div key={idx} className="flex items-stretch border border-white/5 bg-dark-800/30 focus-within:border-white/20 transition-colors">
                               <div className={`w-8 flex items-center justify-center font-mono text-xs border-r border-white/5 bg-dark-900 ${['text-gdg-blue', 'text-gdg-red', 'text-gdg-yellow'][idx]}`}>0{idx+1}</div>
-                              <input required type="text" placeholder="NAME_ALIAS" value={regForm.players[idx]} onChange={e => { const newP = [...regForm.players]; newP[idx] = e.target.value; setRegForm({...regForm, players: newP}); }} className="w-full bg-transparent px-3 py-2 text-sm font-mono text-white outline-none placeholder:text-gray-700" />
+                              <input title="Enter player's name" required type="text" placeholder="NAME_ALIAS" value={regForm.players[idx]} onChange={e => { const newP = [...regForm.players]; newP[idx] = e.target.value; setRegForm({...regForm, players: newP}); }} className="w-full bg-transparent px-3 py-2 text-sm font-mono text-white outline-none placeholder:text-gray-700" />
                             </div>
                           ))}
                         </div>
 
-                        <button type="submit" disabled={loading} className="clip-angled-br w-full bg-gdg-yellow/20 hover:bg-gdg-yellow text-white hover:text-black border border-gdg-yellow py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all hover:shadow-[0_0_40px_rgba(251,188,5,0.6)] mt-auto disabled:opacity-50">
+                        <button title="Register your team for the tournament" type="submit" disabled={loading} className="clip-angled-br w-full bg-gdg-yellow/20 hover:bg-gdg-yellow text-white hover:text-black border border-gdg-yellow py-6 font-display font-black tracking-[0.3em] text-sm md:text-base uppercase transition-all hover:shadow-[0_0_40px_rgba(251,188,5,0.6)] mt-auto disabled:opacity-50">
                           {loading ? 'PROCESSING...' : 'REGISTER NODE'}
                         </button>
                       </form>

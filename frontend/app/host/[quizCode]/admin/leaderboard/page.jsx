@@ -58,7 +58,7 @@ export default function AdminLeaderboardPage() {
           </div>
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] text-gray-500 bg-dark-800 px-3 py-1 border border-white/5">{lastUpdate?.toLocaleTimeString()}</span>
-            <button onClick={exportCSV} className="btn-neon btn-neon-blue text-xs px-4 py-2 flex items-center gap-2"><span>⬇</span> EXPORT_CSV</button>
+            <button title="Download leaderboard as a CSV file" onClick={exportCSV} className="btn-neon btn-neon-blue text-xs px-4 py-2 flex items-center gap-2"><span>⬇</span> EXPORT_CSV</button>
             <Link href="/leaderboard" target="_blank" className="btn-neon btn-neon-green text-xs px-4 py-2 flex items-center gap-2"><span>📺</span> PUBLIC_VIEW</Link>
           </div>
         </div>
