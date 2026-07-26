@@ -20,9 +20,13 @@ const shareTechMono = Share_Tech_Mono({
 });
 
 export const metadata = {
-  title: 'Quiz Platform — Global Tech Quiz',
+  title: 'Decode The Tech | GDG',
   description: 'Crack the code behind everyday technology. The ultimate high-stakes tech quiz experience by Google Developer Groups.',
   keywords: ['GDG', 'Tech Quiz', 'Quiz Platform', 'Hackathon', 'Coding'],
+  icons: {
+    icon: '/gdg-logo.png',
+    apple: '/gdg-logo.png',
+  },
   authors: [{ name: 'GDG' }],
   openGraph: {
     title: 'Quiz Platform',

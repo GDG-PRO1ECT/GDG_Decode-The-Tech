@@ -60,6 +60,9 @@ export default function HostSetupWizard() {
   const [runTour, setRunTour] = useState(false);
 
   useEffect(() => {
+    // Ping backend to wake up from cold start on free hosting tiers (e.g. Render/Railway)
+    fetch('/api/game/status').catch(() => {});
+
     // Clean up all stale tour keys from previous buggy sessions
     ['tour_host_step_1','tour_host_step_2','tour_host_step_3',
      'tour_host_step_4','tour_host_step_5',
