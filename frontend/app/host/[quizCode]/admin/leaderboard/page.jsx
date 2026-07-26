@@ -2,17 +2,60 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(m => m.default || m.Joyride), { ssr: false });
+
+const leaderboardTourSteps = [
+  { target: '.tour-lb-back', content: 'Return to the main Admin dashboard at any time.', title: 'Back to Admin', skipBeacon: true },
+  { target: '.tour-lb-tools', content: 'Export the full leaderboard to CSV, or open the public-facing display view in a new tab for your audience.', title: 'Export & Display', skipBeacon: true },
+  { target: '.tour-lb-stats', content: 'Live aggregated stats — total nodes online, and average scores per phase across all teams.', title: 'Live Stats', skipBeacon: true },
+  { target: '.tour-lb-table', content: 'Full rankings table, auto-refreshed every 30 seconds. Gold, silver, and bronze positions are highlighted automatically.', title: 'Rankings Table', skipBeacon: true },
+];
 
 export default function AdminLeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [session, setSession] = useState(null);
+  const [runTour, setRunTour] = useState(false);
+  const params = useParams();
+  const quizCode = params?.quizCode;
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_leaderboard')) {
+      localStorage.setItem('tour_leaderboard', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    const { status, type, step } = data;
+    if (type === 'step:before' && step?.target) {
+      const el = document.querySelector(step.target);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_leaderboard', 'true');
+      setRunTour(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
+    fetchSession();
     const i = setInterval(loadData, 30000);
     return () => clearInterval(i);
   }, []);
+
+  async function fetchSession() {
+    try {
+      const res = await fetch(`/api/game/status?quizCode=${quizCode}`);
+      const data = await res.json();
+      if (res.ok && data.session) setSession(data.session);
+    } catch {}
+  }
 
   async function loadData() {
     try {
@@ -25,14 +68,20 @@ export default function AdminLeaderboardPage() {
   }
 
   function exportCSV() {
+    const rounds = session?.settings?.rounds || [
+      {roundNumber: 1}, {roundNumber: 2}, {roundNumber: 3}
+    ];
+    const rHeaders = rounds.map(r => `Round ${r.roundNumber}`);
+    const qHeaders = rounds.map(r => `Qs R${r.roundNumber}`);
+    
     const rows = [
-      ['Rank','Team ID','Team Name','Player 1','Player 2','Player 3','Round 1','Round 2','Round 3','Bonus','Total','Qs R1','Qs R2','Qs R3'],
+      ['Rank','Team ID','Team Name','Player 1','Player 2','Player 3', ...rHeaders, 'Bonus','Total', ...qHeaders],
       ...leaderboard.map((t, i) => [
         i+1, t.teamId, t.teamName,
         t.players[0]||'', t.players[1]||'', t.players[2]||'',
-        t.scores.round1, t.scores.round2, t.scores.round3,
+        ...rounds.map(r => t.scores[`round${r.roundNumber}`] || 0),
         t.scores.bonusPoints||0, t.scores.total,
-        t.answeredCount?.round1||0, t.answeredCount?.round2||0, t.answeredCount?.round3||0,
+        ...rounds.map(r => t.answeredCount?.[`round${r.roundNumber}`] || 0)
       ])
     ];
     const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
@@ -47,32 +96,47 @@ export default function AdminLeaderboardPage() {
 
   return (
     <div className="min-h-screen cyber-grid bg-dark-900 text-gray-200">
+      <Joyride
+        steps={leaderboardTourSteps}
+        run={runTour}
+        callback={handleTourCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        disableScrolling={true}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       <div className="border-b border-gdg-yellow/30 bg-dark-900/90 backdrop-blur-md sticky top-0 z-40 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Link href={`/host/${quizCode}/admin`} className="font-mono text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+          <Link href={`/host/${quizCode}/admin`} className="font-mono text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-2 tour-lb-back">
             <span className="text-gdg-yellow">←</span> ROOT_CENTER
           </Link>
           <div className="font-display font-black text-xl text-white tracking-widest flex items-center gap-3">
             <span className="w-2 h-2 bg-gdg-yellow animate-pulse"></span>
             MASTER_LEADERBOARD
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 tour-lb-tools">
             <span className="font-mono text-[10px] text-gray-500 bg-dark-800 px-3 py-1 border border-white/5">{lastUpdate?.toLocaleTimeString()}</span>
             <button onClick={exportCSV} className="btn-neon btn-neon-blue text-xs px-4 py-2 flex items-center gap-2"><span>⬇</span> EXPORT_CSV</button>
-            <Link href="/leaderboard" target="_blank" className="btn-neon btn-neon-green text-xs px-4 py-2 flex items-center gap-2"><span>📺</span> PUBLIC_VIEW</Link>
+            <Link href={`/quiz/${quizCode}/display`} target="_blank" className="btn-neon btn-neon-green text-xs px-4 py-2 flex items-center gap-2"><span>📺</span> PUBLIC_VIEW</Link>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-10 relative z-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="flex flex-wrap justify-center gap-6 mb-10 tour-lb-stats">
           {[
             ['ACTIVE_NODES', leaderboard.length, 'gdg-blue'],
-            ['PHASE_01_AVG', leaderboard.length ? Math.round(leaderboard.reduce((s,t)=>s+t.scores.round1,0)/leaderboard.length) : 0, 'gdg-blue'],
-            ['PHASE_02_AVG', leaderboard.length ? Math.round(leaderboard.reduce((s,t)=>s+t.scores.round2,0)/leaderboard.length) : 0, 'gdg-yellow'],
-            ['PHASE_03_AVG', leaderboard.length ? Math.round(leaderboard.reduce((s,t)=>s+t.scores.round3,0)/leaderboard.length) : 0, 'gdg-red'],
+            ...(session?.settings?.rounds || [{roundNumber:1},{roundNumber:2},{roundNumber:3}]).map((r, idx) => {
+              const colors = ['gdg-blue', 'gdg-yellow', 'gdg-red', 'gdg-green', 'neon-magenta'];
+              return [
+                `PHASE_0${r.roundNumber}_AVG`, 
+                leaderboard.length ? Math.round(leaderboard.reduce((s,t)=>s+(t.scores[`round${r.roundNumber}`]||0),0)/leaderboard.length) : 0, 
+                colors[idx % colors.length]
+              ];
+            })
           ].map(([label, value, color]) => (
-            <div key={label} className={`glass-panel border-b-4 border-${color} p-6 text-center shadow-lg relative overflow-hidden group`}>
+            <div key={label} className={`flex-1 min-w-[200px] max-w-[280px] glass-panel border-b-4 border-${color} p-6 text-center shadow-lg relative overflow-hidden group`}>
               <div className={`absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-${color}/10 to-transparent`} />
               <div className={`font-display font-black text-4xl mb-2 text-${color} group-hover:scale-110 transition-transform`}>{value}</div>
               <div className="font-mono text-[10px] text-gray-400 tracking-widest uppercase">{label}</div>
@@ -90,14 +154,16 @@ export default function AdminLeaderboardPage() {
              <div className="font-mono text-gray-500 text-[10px] tracking-[0.2em] uppercase">No telemetry records found</div>
           </div>
         ) : (
-          <div className="glass-panel p-2 md:p-6 border-white/5">
+          <div className="glass-panel p-2 md:p-6 border-white/5 tour-lb-table">
             <div className="grid grid-cols-12 gap-2 px-4 py-3 font-mono text-[10px] text-gray-500 tracking-[0.2em] border-b border-white/10 mb-2">
               <div className="col-span-1 hidden sm:block">RANK</div>
               <div className="col-span-8 sm:col-span-4">NODE_IDENTIFIER</div>
-              <div className="col-span-3 hidden md:block">OPERATORS</div>
-              <div className="col-span-1 hidden lg:block text-right">P1</div>
-              <div className="col-span-1 hidden lg:block text-right">P2</div>
-              <div className="col-span-1 hidden lg:block text-right">P3</div>
+              <div className="col-span-3 hidden md:block lg:col-span-2">OPERATORS</div>
+              <div className="col-span-3 hidden lg:flex justify-end gap-2">
+                {(session?.settings?.rounds || [{roundNumber:1},{roundNumber:2},{roundNumber:3}]).map(r => (
+                  <div key={r.roundNumber} className="w-10 text-right">P{r.roundNumber}</div>
+                ))}
+              </div>
               <div className="col-span-4 sm:col-span-3 lg:col-span-2 text-right">TOTAL_CYCLES</div>
             </div>
             
@@ -121,13 +187,20 @@ export default function AdminLeaderboardPage() {
                     <div className="font-mono text-[9px] text-gray-500 tracking-widest">{team.teamId}</div>
                   </div>
                   
-                  <div className="col-span-3 hidden md:block font-mono text-[10px] text-gray-400 truncate z-10">
+                  <div className="col-span-3 hidden md:block lg:col-span-2 font-mono text-[10px] text-gray-400 truncate z-10">
                     <div className="bg-dark-900 inline-block px-2 py-1 border border-white/5">{team.players.join(' // ')}</div>
                   </div>
                   
-                  <div className="col-span-1 hidden lg:block text-right font-mono text-sm text-gdg-blue z-10">{team.scores.round1}</div>
-                  <div className="col-span-1 hidden lg:block text-right font-mono text-sm text-gdg-yellow z-10">{team.scores.round2}</div>
-                  <div className="col-span-1 hidden lg:block text-right font-mono text-sm text-gdg-red z-10">{team.scores.round3}</div>
+                  <div className="col-span-3 hidden lg:flex justify-end gap-2 z-10">
+                    {(session?.settings?.rounds || [{roundNumber:1},{roundNumber:2},{roundNumber:3}]).map((r, rIdx) => {
+                      const colors = ['text-gdg-blue', 'text-gdg-yellow', 'text-gdg-red', 'text-gdg-green', 'text-neon-magenta'];
+                      return (
+                        <div key={r.roundNumber} className={`w-10 text-right font-mono text-sm ${colors[rIdx % colors.length]}`}>
+                          {team.scores[`round${r.roundNumber}`] || 0}
+                        </div>
+                      );
+                    })}
+                  </div>
                   
                   <div className={`col-span-4 sm:col-span-3 lg:col-span-2 text-right font-mono font-black text-2xl z-10 ${i===0?'text-gdg-yellow drop-shadow-[0_0_10px_rgba(251,188,5,0.5)]':i===1?'text-gray-300':i===2?'text-orange-500':'text-gdg-green'}`}>
                     {team.scores.total}

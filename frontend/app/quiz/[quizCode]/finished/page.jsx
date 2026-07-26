@@ -131,7 +131,7 @@ export default function FinishedPage() {
           <Link href={`/quiz/${quizCode}/leaderboard`} className="btn-neon btn-neon-cyan px-8 py-3 font-display font-bold tracking-widest">
             FULL LEADERBOARD →
           </Link>
-          <Link href="/admin/leaderboard" className="btn-neon px-8 py-3 font-display font-bold tracking-widest">
+          <Link href={`/host/${quizCode}/admin/leaderboard`} className="btn-neon px-8 py-3 font-display font-bold tracking-widest">
             📥 EXPORT RESULTS
           </Link>
           <Link href="/" className="btn-neon px-8 py-3 font-display font-bold tracking-widest opacity-50">

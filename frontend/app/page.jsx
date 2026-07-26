@@ -1,13 +1,87 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, forwardRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, Star, Activity, Lock, Cloud, Cpu, Shield, Zap, Sparkles, Database, BrainCircuit, Terminal } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
 import { Inter, Playfair_Display } from 'next/font/google';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const playfair = Playfair_Display({ subsets: ['latin'], style: ['normal', 'italic'], variable: '--font-playfair' });
+
+const LandingTourTooltip = forwardRef((props, ref) => {
+  if (props.step.target === '.tour-landing-cards') {
+    return (
+      <div 
+        ref={ref}
+        {...props.tooltipProps} 
+        className="pointer-events-none z-[100000]"
+        style={{
+           ...props.tooltipProps.style,
+           backgroundColor: 'transparent',
+           boxShadow: 'none',
+           border: 'none',
+           padding: 0,
+           width: '100%',
+           maxWidth: '1024px',
+           height: '0px',
+           display: 'flex',
+           alignItems: 'center',
+           justifyContent: 'center',
+        }}
+      >
+        <div className="relative w-full flex items-center justify-between">
+          
+          {/* Left Tooltip */}
+          <div className="absolute right-[100%] mr-6 lg:mr-12 w-[280px] sm:w-[320px] bg-[#202124] text-white rounded-xl shadow-2xl font-sans border border-white/10 pointer-events-auto transform translate-y-[200px] sm:translate-y-[250px]" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(66, 133, 244, 0.1)' }}>
+            
+            {/* Arrow pointing right */}
+            <div className="absolute top-1/2 -right-[7px] w-[14px] h-[14px] bg-[#202124] border-t border-r border-white/10 transform rotate-45 -translate-y-1/2"></div>
+            
+            <div className="p-5 sm:p-6 relative z-10 bg-[#202124] rounded-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-base sm:text-lg font-medium text-gray-100">Join an Active Session</h4>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                Enter the 6-character access code provided by your event coordinator to authenticate and join as a player.
+              </div>
+            </div>
+          </div>
+
+          {/* Right Tooltip */}
+          <div className="absolute left-[100%] ml-6 lg:ml-12 w-[280px] sm:w-[320px] bg-[#202124] text-white rounded-xl shadow-2xl font-sans border border-white/10 pointer-events-auto transform translate-y-[200px] sm:translate-y-[250px] flex flex-col justify-between" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(66, 133, 244, 0.1)' }}>
+            
+            {/* Arrow pointing left */}
+            <div className="absolute top-1/2 -left-[7px] w-[14px] h-[14px] bg-[#202124] border-b border-l border-white/10 transform rotate-45 -translate-y-1/2"></div>
+
+            <div className="p-5 sm:p-6 relative z-10 bg-[#202124] rounded-t-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-base sm:text-lg font-medium text-gray-100">Host a Tournament</h4>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                Initialize a new server, configure rounds, and deploy a full competition cluster as a host.
+              </div>
+            </div>
+            <div className="px-5 sm:px-6 py-4 bg-[#28292c] flex items-center justify-between border-t border-white/5 rounded-b-xl relative z-10">
+              <button {...props.closeProps} className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition-colors">Skip</button>
+              <div className="flex items-center gap-3">
+                <button {...props.backProps} className="text-xs sm:text-sm font-medium text-[#8ab4f8] hover:text-[#aecbfa] transition-colors">Back</button>
+                <button {...props.primaryProps} className="px-4 py-1.5 rounded-full bg-[#8ab4f8] hover:bg-[#aecbfa] text-[#202124] text-xs sm:text-sm font-bold transition-all shadow-[0_0_10px_rgba(138,180,248,0.2)]">Got it</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  return <TourTooltip ref={ref} {...props} />;
+});
 
 export default function Page() {
   const router = useRouter();
@@ -18,6 +92,38 @@ export default function Page() {
   const [error, setError]       = useState('');
   const [sysTime, setSysTime]   = useState('');
   const [scrolled, setScrolled] = useState(0);
+  const [runTour, setRunTour] = useState(false);
+
+  const landingTourSteps = [
+    { target: '.tour-landing-join', content: 'Ready to host your own arena? Click here to create a new tournament session.', title: 'Host a Game', skipBeacon: true },
+    { target: '.tour-landing-enter', content: 'Already have an access code? Enter it here to join an active tournament.', title: 'Join a Game', skipBeacon: true },
+    { target: '.tour-landing-mission', content: 'Our platform is built on zero latency and absolute precision to ensure fair competition.', title: 'Our Mission', skipBeacon: true },
+    { target: '.tour-landing-tech', content: 'Powered by real-time WebSockets, AI question parsing, and enterprise-grade anti-cheat.', title: 'Core Technology', skipBeacon: true },
+    { target: '.tour-landing-cards', content: 'Choose your path. Join an active session as a player, or initialize a new server as a host.', title: 'Start your journey', skipBeacon: true, placement: 'top', hideArrow: true }
+  ];
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (!localStorage.getItem('tour_landing')) {
+      localStorage.setItem('tour_landing', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status, type, step } = data;
+    // Manually scroll to the target element before each step
+    if (type === 'step:before' && step?.target) {
+      const el = document.querySelector(step.target);
+      if (el) {
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+    }
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_landing', 'true');
+      setRunTour(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Reveal Elements on Scroll
@@ -90,7 +196,18 @@ export default function Page() {
   const navScrolled = scrolled > 50;
 
   return (
-    <div className={`min-h-screen bg-[#050505] text-white selection:bg-[#4285F4] selection:text-white ${inter.variable} ${playfair.variable} font-sans overflow-x-hidden relative`}>
+    <>
+      <Joyride 
+        steps={landingTourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={LandingTourTooltip}
+        disableScrolling={true}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
+      <div className={`min-h-screen bg-[#050505] text-white selection:bg-[#4285F4] selection:text-white ${inter.variable} ${playfair.variable} font-sans relative`}>
       <style dangerouslySetInnerHTML={{__html: `
         :root {
             --bg: #050505;
@@ -140,6 +257,16 @@ export default function Page() {
         .animate-breathe { animation: breathe 10s ease-in-out infinite; }
         .animate-pan-bg { animation: pan-bg 8s linear infinite; }
         
+        @keyframes popup-btn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; filter: blur(10px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+        }
+        .animate-popup-btn {
+            animation: popup-btn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation-delay: 3.8s;
+            opacity: 0;
+        }
+        
         .glass-card {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(16px);
@@ -162,6 +289,17 @@ export default function Page() {
       {/* Global Noise Overlay */}
       <div className="noise-overlay"></div>
 
+      {/* Embedded CSS moved out of the way */}
+      {runTour && (
+        <style dangerouslySetInnerHTML={{__html: `
+          .reveal {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+          }
+        `}} />
+      )}
+
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navScrolled ? 'py-4 bg-[#050505]/80 backdrop-blur-md border-b border-white/5' : 'py-8 bg-transparent'}`}>
         <div className="container mx-auto px-6 flex items-center justify-between">
@@ -177,7 +315,7 @@ export default function Page() {
           
           <div className="flex-1"></div>
 
-          <a href="#works" className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-medium bg-[#4285F4] text-white hover:scale-105 hover:bg-[#3b78e7] shadow-[0_0_15px_rgba(66,133,244,0.4)] transition-all duration-300">
+          <a href="#works" className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-medium bg-[#4285F4] text-white hover:scale-105 hover:bg-[#3b78e7] shadow-[0_0_15px_rgba(66,133,244,0.4)] transition-all duration-300 tour-landing-join">
               Join Event
           </a>
         </div>
@@ -235,7 +373,10 @@ export default function Page() {
 
         {/* Hero Content */}
         <div className="container mx-auto px-6 relative z-20 text-center flex flex-col items-center justify-center h-full pt-10">
-            <div className="max-w-4xl mx-auto" style={{ transform: `translateY(${Math.min(scrolled * 0.4, 400)}px)`, opacity: Math.max(0, 1 - scrolled / 600) }}>
+            <div className="max-w-4xl mx-auto" style={{ 
+                transform: runTour ? 'none' : `translateY(${Math.min(scrolled * 0.4, 400)}px)`, 
+                opacity: runTour ? 1 : Math.max(0, 1 - scrolled / 600) 
+            }}>
                 
                 <div className="reveal inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
                     <Sparkles className="w-4 h-4 text-[#FBBC05]" />
@@ -255,14 +396,14 @@ export default function Page() {
                     </p>
                 </div>
 
-                <div className="reveal flex flex-col items-center gap-6" style={{ transitionDelay: '300ms' }}>
-                    <a href="#works" className="relative group cursor-pointer inline-block">
+                <div className="flex flex-col items-center gap-6 animate-popup-btn">
+                    <Link href="/join" className="relative group cursor-pointer inline-block tour-landing-enter">
                        <div className="absolute -inset-1 bg-gradient-to-r from-[#4285F4] via-[#EA4335] to-[#34A853] rounded-full blur opacity-40 group-hover:opacity-75 transition duration-1000 group-hover:duration-300 animate-pan-bg" style={{ backgroundSize: '200% auto' }}></div>
                        <div className="relative glass-card px-10 py-4 rounded-full flex items-center gap-3 text-sm md:text-base text-white uppercase tracking-[0.2em] font-bold group-hover:bg-white/10 transition-all duration-300 border border-white/10">
                          <span>Enter Access Code</span>
                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                        </div>
-                    </a>
+                    </Link>
                     
                     <div className="flex items-center gap-4 text-[10px] md:text-xs text-white/40 uppercase tracking-widest mt-8 font-mono bg-black/40 px-4 py-2 rounded-full border border-white/5 shadow-inner">
                        <span>{sysTime || '--:--'}</span>
@@ -277,7 +418,7 @@ export default function Page() {
       {/* Mission Section */}
       <section id="expertise" className="py-32 relative">
         <div className="container mx-auto px-6 relative z-10">
-            <div className="max-w-4xl mx-auto text-center reveal">
+            <div className="max-w-4xl mx-auto text-center reveal tour-landing-mission">
                 <h2 className="text-3xl md:text-5xl lg:text-6xl leading-tight text-white mb-12 font-serif font-medium drop-shadow-xl">
                     We enforce integrity where it matters most.
                 </h2>
@@ -287,7 +428,7 @@ export default function Page() {
             </div>
 
             {/* Core Tech Grid */}
-            <div className="mt-20 md:mt-32 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center transition-all duration-500">
+            <div className="mt-20 md:mt-32 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center transition-all duration-500 tour-landing-tech">
                 <div className="reveal flex flex-col items-center gap-6 group w-full">
                   <div className="w-20 h-20 rounded-2xl glass-card flex items-center justify-center group-hover:bg-[#4285F4]/10 group-hover:border-[#4285F4]/30 transition-all duration-300 relative">
                     <div className="absolute inset-0 bg-[#4285F4]/0 group-hover:bg-[#4285F4]/20 blur-xl rounded-full transition-colors duration-500"></div>
@@ -347,9 +488,9 @@ export default function Page() {
                 </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto tour-landing-cards">
                 {/* Card 1 - Dark Glass (Join) */}
-                <div style={{ transform: `translateY(${scrolled * 0.05}px)` }}>
+                <div style={{ transform: runTour ? 'none' : `translateY(${scrolled * 0.05}px)` }}>
                     <div className="reveal glass-card rounded-[2rem] p-8 md:p-12 aspect-[4/5] flex flex-col justify-between group relative overflow-hidden transition-all duration-500 hover:border-[#4285F4]/30 hover:shadow-[0_0_40px_rgba(66,133,244,0.1)]">
                         
                         {/* Inner ambient glow */}
@@ -403,7 +544,7 @@ export default function Page() {
                 </div>
 
                 {/* Card 2 - Dark Glass (Host) */}
-                <div className="md:mt-24" style={{ transform: `translateY(${scrolled * -0.05}px)` }}>
+                <div className="md:mt-24" style={{ transform: runTour ? 'none' : `translateY(${scrolled * -0.05}px)` }}>
                     <div className="reveal glass-card rounded-[2rem] p-8 md:p-12 aspect-[4/5] flex flex-col justify-between group relative overflow-hidden transition-all duration-500 hover:border-[#EA4335]/30 hover:shadow-[0_0_40px_rgba(234,67,53,0.1)]" style={{ transitionDelay: '150ms' }}>
                         
                         <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full bg-[#EA4335]/10 blur-[80px] pointer-events-none group-hover:bg-[#EA4335]/20 transition-colors duration-700"></div>
@@ -461,5 +602,6 @@ export default function Page() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

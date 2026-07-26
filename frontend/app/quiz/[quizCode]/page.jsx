@@ -13,7 +13,13 @@ export default async function QuizLandingPage({ params }) {
     if (!res.ok || !data.session) {
       notFound();
     }
-    return <QuizClient quizName={data.session.quizName} />;
+    return (
+      <QuizClient 
+        quizName={data.session.quizName} 
+        playersPerTeam={data.session.settings?.playersPerTeam || 3} 
+        rounds={data.session.settings?.rounds || []}
+      />
+    );
   } catch (err) {
     console.error(err);
     notFound();

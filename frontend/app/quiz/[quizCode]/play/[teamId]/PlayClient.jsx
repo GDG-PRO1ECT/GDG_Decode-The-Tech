@@ -5,6 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Zap, Cpu, Activity, Clock, Target, AlertTriangle, Lock, Unlock, ArrowRight, CheckCircle2, XCircle, Crosshair, Hexagon, Radar, Pause, Send, Code, Terminal, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { getSocket } from '@/lib/socket';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 
 // --- Cyberpunk Scramble Text ---
 const ScrambleText = ({ text, duration = 1200, className }) => {
@@ -184,7 +188,6 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
   const [currentQIdx, setCurrentQIdx] = useState(firstUnanswered >= 0 ? firstUnanswered : 0);
   const [team, setTeam] = useState(initialTeam);
   const [session, setSession] = useState(initialSession);
-  const [leaderboard, setLeaderboard] = useState([]);
   const [allAnswered, setAllAnswered] = useState(initialQuestions?.length > 0 && initialQuestions?.every(q => q.isAnswered));
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -197,8 +200,32 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
   });
   const [totalTime, setTotalTime] = useState(initialSession?.roundDurations?.[`round${initialSession?.currentRound || 1}`] || (initialSession?.currentRound === 3 ? 1500 : 1200));
   const [isDisqualifiedLocal, setIsDisqualifiedLocal] = useState(initialTeam?.isDisqualified || false);
+  const [solution, setSolution] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [runTour, setRunTour] = useState(false);
   const timerRef = useRef(null);
   const hasStartedRef = useRef(true);
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_play')) {
+      localStorage.setItem('tour_play', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_play', 'true');
+      setRunTour(false);
+    }
+  };
+
+  const playTourSteps = [
+    { target: '.tour-play-telemetry', content: 'This is your team\'s telemetry, active operator, and live round timer.', title: 'Telemetry', skipBeacon: true },
+    { target: '.tour-play-question', content: 'Your current challenge node. Read carefully and solve it to proceed.', title: 'Challenge Payload', skipBeacon: true },
+    { target: '.tour-play-input', content: 'Input your solution or select your answer here. Transmit your signature when ready.', title: 'Submission Uplink', skipBeacon: true }
+  ];
 
   const enterFullscreen = useCallback(async () => {
     try {
@@ -266,10 +293,8 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
     socket.emit('join_team', { teamId, quizCode });
 
     const onSessionUpdate = (newSession) => setSession(newSession);
-    const onLeaderboardUpdate = (newLeaderboard) => setLeaderboard(newLeaderboard);
 
     socket.on('session_update', onSessionUpdate);
-    socket.on('leaderboard_update', onLeaderboardUpdate);
 
     // Fallback polling (much slower)
     const interval = setInterval(() => {
@@ -283,7 +308,6 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
 
     return () => {
       socket.off('session_update', onSessionUpdate);
-      socket.off('leaderboard_update', onLeaderboardUpdate);
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
@@ -347,37 +371,15 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
       if (data.team?.isDisqualified) setIsDisqualifiedLocal(true);
       
       setAllAnswered(data.questions?.length > 0 && data.questions?.every(q => q.isAnswered));
-
-      const lbRes = await fetch(`/api/leaderboard?quizCode=${quizCode}&limit=10&teamId=${teamId}`);
-      if (lbRes.ok) {
-        const lbData = await lbRes.json();
-        let finalLb = lbData.leaderboard || [];
-        if (lbData.targetTeam && !finalLb.some(t => t.teamId === teamId)) {
-          finalLb.push(lbData.targetTeam);
-        }
-        setLeaderboard(finalLb);
-      }
     } catch {}
   }
 
   async function fetchSessionOnly() {
     if (document.hidden || !quizCode || !teamId) return;
     try {
-      const [sessionRes, lbRes] = await Promise.all([
-        fetch(`/api/game/status?quizCode=${quizCode}`),
-        fetch(`/api/leaderboard?quizCode=${quizCode}&limit=10&teamId=${teamId}`)
-      ]);
+      const sessionRes = await fetch(`/api/game/status?quizCode=${quizCode}`);
       const { session } = await sessionRes.json();
       setSession(session);
-      
-      if (lbRes.ok) {
-        const lbData = await lbRes.json();
-        let finalLb = lbData.leaderboard || [];
-        if (lbData.targetTeam && !finalLb.some(t => t.teamId === teamId)) {
-          finalLb.push(lbData.targetTeam);
-        }
-        setLeaderboard(finalLb);
-      }
     } catch {}
   }
 
@@ -520,6 +522,17 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
          <div className="absolute top-0 left-0 w-full h-[2px] opacity-30 animate-[scan_5s_linear_infinite]" style={{ backgroundColor: currentHexColor, boxShadow: `0 0 20px ${currentHexColor}` }} />
       </div>
 
+      <Joyride 
+        steps={playTourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        scrollOffset={150}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
+
       {/* Disqualification Banner */}
       {(isDisqualifiedLocal || team?.isDisqualified) && (
         <div className="relative z-[100] w-full bg-red-600/90 backdrop-blur-md border-b border-red-400/50 py-2 px-6 flex items-center justify-center gap-4 shadow-[0_5px_20px_rgba(220,38,38,0.5)]">
@@ -530,7 +543,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
         </div>
       )}
 
-      <div className="relative z-40 w-full bg-[#000]/60 backdrop-blur-2xl border-b border-white/10 flex flex-col">
+      <div className="relative z-40 w-full bg-[#000]/60 backdrop-blur-2xl border-b border-white/10 flex flex-col tour-play-telemetry">
         <div className="w-full h-1 bg-white/10 relative overflow-hidden">
            <motion.div className="absolute top-0 left-0 h-full" style={{ width: `${timePct * 100}%`, backgroundColor: isUrgent ? '#FF003C' : currentHexColor, transition: 'width 1s linear', boxShadow: `0 0 15px ${isUrgent ? '#FF003C' : currentHexColor}` }} />
         </div>
@@ -619,7 +632,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                          <span className="h-[1px] flex-1 opacity-30" style={{ backgroundColor: currentHexColor }} />
                       </div>
 
-                     <div className="relative bg-[#000]/60 backdrop-blur-2xl border border-white/10 p-6 md:p-8 text-center w-full max-w-3xl clip-angled-lg mb-6">
+                     <div className="relative bg-[#000]/60 backdrop-blur-2xl border border-white/10 p-6 md:p-8 text-center w-full max-w-3xl clip-angled-lg mb-6 tour-play-question">
                         {/* Emoji Clue Display — shown prominently for Round 2 */}
                         {currentQ.emojiClue && (
                           <div className="text-6xl md:text-7xl mb-4 tracking-widest leading-relaxed">
@@ -632,14 +645,16 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
                      </div>
 
                      {currentQ.type === 'match' ? (
-                       <MatchInterface 
-                         data={currentQ.matchData} 
-                         onComplete={submitAnswer} 
-                         isSubmitting={submitting} 
-                         accentColor={currentHexColor} 
-                       />
+                       <div className="w-full flex flex-col items-center gap-8 tour-play-input">
+                         <MatchInterface 
+                           data={currentQ.matchData} 
+                           onComplete={submitAnswer} 
+                           isSubmitting={submitting} 
+                           accentColor={currentHexColor} 
+                         />
+                       </div>
                      ) : (
-                       <div className="w-full flex flex-col items-center gap-8 bg-black/40 p-8 rounded-3xl border border-white/5 shadow-2xl">
+                       <div className="w-full flex flex-col items-center gap-8 bg-black/40 p-8 rounded-3xl border border-white/5 shadow-2xl tour-play-input">
                           <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
                             {currentQ.options?.map((opt, i) => (
                               <motion.button
@@ -690,191 +705,7 @@ export default function PlayClient({ initialQuestions, initialTeam, initialSessi
          </div>
       </div>
 
-      {/* F1-Style Live Leaderboard */}
-      {isRoundActive && (
-        <div className="absolute right-0 top-[88px] z-50 w-72 hidden xl:flex flex-col">
-          <style dangerouslySetInnerHTML={{__html: `
-            @keyframes f1-scan { 0% { transform: translateY(-100%); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(400%); opacity: 0; } }
-            @keyframes rank-pulse { 0%,100% { box-shadow: 0 0 0px currentColor; } 50% { box-shadow: 0 0 12px currentColor; } }
-            @keyframes data-flicker { 0%,100% { opacity: 1; } 95% { opacity: 0.7; } }
-            .f1-row-enter { animation: f1-row-in 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-            @keyframes f1-row-in { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
-            .lb-score { animation: data-flicker 4s infinite; }
-          `}} />
 
-          {/* Panel Header */}
-          <div className="relative bg-black/80 backdrop-blur-2xl border-l border-t border-b border-white/10 overflow-hidden"
-            style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 16px 100%, 0 calc(100% - 16px))' }}>
-            
-            {/* Accent top bar */}
-            <div className="absolute top-0 left-0 w-full h-[2px]" style={{ background: `linear-gradient(to right, transparent, ${currentHexColor}, transparent)` }} />
-            
-            {/* Scan line */}
-            <div className="absolute left-0 w-full h-8 opacity-10 pointer-events-none" 
-              style={{ background: `linear-gradient(to bottom, transparent, ${currentHexColor}, transparent)`, animation: 'f1-scan 4s linear infinite' }} />
-
-            <div className="relative flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Activity size={13} style={{ color: currentHexColor }} />
-                  <div className="absolute inset-0 animate-ping opacity-40" style={{ color: currentHexColor }}>
-                    <Activity size={13} />
-                  </div>
-                </div>
-                <span className="font-display font-black text-[10px] uppercase tracking-[0.35em] text-white">Live Timing</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: currentHexColor, boxShadow: `0 0 6px ${currentHexColor}` }} />
-                <span className="font-mono text-[9px] tracking-widest uppercase" style={{ color: currentHexColor }}>
-                  Phase 0{round}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Rank Rows */}
-          <div className="bg-black/70 backdrop-blur-2xl border-l border-b border-white/[0.07] flex flex-col overflow-hidden"
-            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 0px) 100%, 16px 100%, 0 100%)' }}>
-            
-            {(() => {
-              const topN = leaderboard.slice(0, 8);
-              const myTeam = leaderboard.find(t => t.teamId === team?.teamId);
-              const myRankInTopN = topN.find(t => t.teamId === team?.teamId);
-              const rows = [...topN];
-              
-              // Medal colors for top 3
-              const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-              const medalGlows  = ['rgba(255,215,0,0.3)', 'rgba(192,192,192,0.2)', 'rgba(205,127,50,0.2)'];
-
-              return (
-                <>
-                  {rows.map((t, idx) => {
-                    const isMe = t.teamId === team?.teamId;
-                    const isMedal = idx < 3;
-                    const accentCol = isMedal ? medalColors[idx] : isMe ? currentHexColor : 'rgba(255,255,255,0.3)';
-                    const score = t.scores?.[`round${round}`] || 0;
-
-                    return (
-                      <motion.div
-                        key={t.teamId}
-                        layout
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.35, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative flex items-center group"
-                        style={{
-                          borderBottom: '1px solid rgba(255,255,255,0.04)',
-                          background: isMe
-                            ? `linear-gradient(to right, ${currentHexColor}18, ${currentHexColor}08, transparent)`
-                            : isMedal
-                            ? `linear-gradient(to right, ${medalColors[idx]}10, transparent)`
-                            : 'transparent',
-                        }}
-                      >
-                        {/* Left accent bar */}
-                        <div className="absolute left-0 top-0 bottom-0 w-[3px] transition-all duration-300"
-                          style={{
-                            backgroundColor: isMe ? currentHexColor : isMedal ? medalColors[idx] : 'transparent',
-                            boxShadow: isMe ? `0 0 8px ${currentHexColor}` : isMedal ? `0 0 6px ${medalColors[idx]}` : 'none',
-                          }} />
-
-                        {/* Rank Number */}
-                        <div className="flex-shrink-0 w-10 flex items-center justify-center py-3 pl-3">
-                          {isMedal ? (
-                            <div className="w-6 h-6 rounded-sm flex items-center justify-center font-display font-black text-[11px]"
-                              style={{
-                                backgroundColor: `${medalColors[idx]}22`,
-                                color: medalColors[idx],
-                                boxShadow: `0 0 8px ${medalGlows[idx]}`,
-                                border: `1px solid ${medalColors[idx]}50`,
-                              }}>
-                              {t.rank}
-                            </div>
-                          ) : (
-                            <span className="font-mono text-[11px] font-bold" style={{ color: isMe ? currentHexColor : 'rgba(255,255,255,0.25)' }}>
-                              {String(t.rank).padStart(2, '0')}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Team Name */}
-                        <div className="flex-1 min-w-0 pr-2 py-3">
-                          <div className={`font-display font-black text-[11px] uppercase tracking-wider truncate transition-colors ${isMe ? 'text-white' : 'text-white/50 group-hover:text-white/70'}`}>
-                            {t.teamName}
-                          </div>
-                          {isMe && (
-                            <div className="font-mono text-[8px] tracking-[0.3em] uppercase mt-0.5" style={{ color: currentHexColor }}>
-                              ◆ YOU
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Score */}
-                        <div className="flex-shrink-0 pr-4 py-3 text-right">
-                          <div className="lb-score font-display font-black text-sm leading-none"
-                            style={{ color: isMe ? currentHexColor : isMedal ? medalColors[idx] : 'rgba(255,255,255,0.6)' }}>
-                            {score}
-                          </div>
-                          <div className="font-mono text-[7px] text-white/20 tracking-widest uppercase mt-0.5">pts</div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-
-                  {/* Separator + current team if not in top 8 */}
-                  {myTeam && !myRankInTopN && (
-                    <>
-                      <div className="flex items-center gap-2 px-4 py-1">
-                        <div className="flex-1 h-[1px] bg-white/5" />
-                        <span className="font-mono text-[8px] text-white/20 tracking-widest">• • •</span>
-                        <div className="flex-1 h-[1px] bg-white/5" />
-                      </div>
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="relative flex items-center"
-                        style={{ background: `linear-gradient(to right, ${currentHexColor}22, ${currentHexColor}0a, transparent)` }}
-                      >
-                        <div className="absolute left-0 top-0 bottom-0 w-[3px]"
-                          style={{ backgroundColor: currentHexColor, boxShadow: `0 0 8px ${currentHexColor}` }} />
-                        <div className="flex-shrink-0 w-10 flex items-center justify-center py-3 pl-3">
-                          <span className="font-mono text-[11px] font-bold" style={{ color: currentHexColor }}>
-                            {String(myTeam.rank).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0 pr-2 py-3">
-                          <div className="font-display font-black text-[11px] uppercase tracking-wider truncate text-white">
-                            {myTeam.teamName}
-                          </div>
-                          <div className="font-mono text-[8px] tracking-[0.3em] uppercase mt-0.5" style={{ color: currentHexColor }}>◆ YOU</div>
-                        </div>
-                        <div className="flex-shrink-0 pr-4 py-3 text-right">
-                          <div className="font-display font-black text-sm leading-none" style={{ color: currentHexColor }}>
-                            {myTeam.scores?.[`round${round}`] || 0}
-                          </div>
-                          <div className="font-mono text-[7px] text-white/20 tracking-widest uppercase mt-0.5">pts</div>
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </>
-              );
-            })()}
-
-            {/* Footer */}
-            <div className="flex items-center justify-between px-4 py-2 border-t border-white/[0.04]">
-              <span className="font-mono text-[8px] text-white/15 uppercase tracking-[0.4em]">
-                {leaderboard.length} Nodes
-              </span>
-              <div className="flex items-center gap-1">
-                <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
-                <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="w-1 h-1 rounded-full bg-white/20 animate-pulse" style={{ animationDelay: '0.4s' }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -39,11 +39,13 @@ export const metadata = {
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import LoadingScreen from '@/components/LoadingScreen';
+import DisableRightClick from '@/components/DisableRightClick';
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${orbitron.variable} ${rajdhani.variable} ${shareTechMono.variable} font-body bg-dark-900 text-white antialiased`}>
+        <DisableRightClick />
         <LoadingScreen />
         {children}
         <div className="fixed bottom-4 right-4 z-[9999] opacity-70 hover:opacity-100 transition-opacity pointer-events-none mix-blend-screen">

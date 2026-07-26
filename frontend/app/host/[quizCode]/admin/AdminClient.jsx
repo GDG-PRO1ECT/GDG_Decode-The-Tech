@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Network, Database, MonitorPlay, BarChart3, Zap, Skull, Power, Play, Pause, Square, AlertTriangle, ShieldAlert, Cpu, Clock, Activity, RefreshCw } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 
 const STATUS_MAP = {
   draft: { label: 'SETUP STAGE', color: 'text-gray-500', dot: 'bg-gray-500', glow: 'shadow-[0_0_15px_#6b7280]', hex: '#6b7280' },
@@ -27,8 +31,33 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: 'success' });
   const [timeLeft, setTimeLeft] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  const [runTour, setRunTour] = useState(false);
   const timerRef = useRef(null);
   const [showDanger, setShowDanger] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_admin')) {
+      localStorage.setItem('tour_admin', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_admin', 'true');
+      setRunTour(false);
+    }
+  };
+
+  const adminTourSteps = [
+    { target: '.tour-admin-nav', content: 'These are your core navigation tools. Access teams, questions, and the live leaderboard.', title: 'Admin Navigation', skipBeacon: true },
+    { target: '.tour-admin-timer', content: 'This tracks the remaining time for the current round. It automatically locks submissions when it hits 0:00.', title: 'Round Timer', skipBeacon: true },
+    { target: '.tour-admin-controls', content: 'Start, Pause, or Finish the current round here. Ending a round locks all submissions.', title: 'Round Controls', skipBeacon: true },
+    { target: '.tour-admin-stats', content: 'Real-time telemetry showing how many teams are online and their submission progress.', title: 'Live Stats', skipBeacon: true }
+  ];
 
   const status = session?.status || 'draft';
   const statusInfo = STATUS_MAP[status] || STATUS_MAP.draft;
@@ -151,6 +180,17 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px] opacity-10 pointer-events-none transition-all duration-1000`} style={{ backgroundColor: statusInfo.hex }} />
       <div className="cyber-grid absolute inset-0 pointer-events-none z-0 opacity-30"></div>
 
+      <Joyride 
+        steps={adminTourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        scrollOffset={150}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
+
       {/* Top Navbar */}
       <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="relative z-50 w-full pt-6 px-8 max-w-[1800px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
@@ -165,7 +205,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
           </button>
         </div>
         
-        <div className="flex flex-1 justify-center gap-2 px-4 overflow-x-auto custom-scrollbar">
+        <div className="flex flex-1 justify-center gap-2 px-4 overflow-x-auto custom-scrollbar tour-admin-nav">
           {[
             { href: `/host/${quizCode}/admin/teams`, icon: Network, label: 'TEAMS' },
             { href: `/host/${quizCode}/questions`, icon: Database, label: 'PAYLOAD' },
@@ -208,7 +248,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
             )}
           </AnimatePresence>
 
-          <div className="glass-panel p-8 rounded-[2rem] border border-white/10 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] group">
+          <div className="glass-panel p-8 rounded-[2rem] border border-white/10 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] group tour-admin-timer">
              {/* Holographic UI Rings */}
              <div className="absolute inset-0 bg-[url('/images/cubes.png')] opacity-5 mix-blend-overlay"></div>
              
@@ -273,7 +313,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
         </motion.div>
 
         {/* MIDDLE COLUMN: Phase Controls */}
-        <motion.div variants={itemVars} className="xl:col-span-5 flex flex-col gap-6 h-full">
+        <motion.div variants={itemVars} className="xl:col-span-5 flex flex-col gap-6 h-full tour-admin-controls">
            <div className="font-display font-bold text-white text-lg tracking-[0.2em] flex items-center gap-3 mb-2">
              <Zap size={20} className="text-gdg-blue" /> PHASE_MATRIX
            </div>
@@ -377,7 +417,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
         </motion.div>
 
         {/* RIGHT COLUMN: Live Telemetry */}
-        <motion.div variants={itemVars} className="hidden xl:block xl:col-span-3 xl:h-auto">
+        <motion.div variants={itemVars} className="hidden xl:block xl:col-span-3 xl:h-auto tour-admin-stats">
           <div className="glass-panel p-6 rounded-[2rem] border border-white/10 relative h-full flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-gdg-blue/5 blur-[50px] pointer-events-none" />
             

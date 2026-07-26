@@ -2,28 +2,71 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
 
-const ROUND_LABELS = {
-  1: 'DECODE THE JARGON',
-  2: 'EMOJI PATTERN ANALYSIS',
-  3: 'REVERSE LOGIC GATE',
-};
+const Joyride = dynamic(() => import('react-joyride').then(m => m.default || m.Joyride), { ssr: false });
+
+const arenaTourSteps = [
+  { target: '.tour-arena-back', content: 'Return to the main Admin HQ at any time.', title: 'Back to Admin', skipBeacon: true },
+  { target: '.tour-arena-filters', content: 'Click a round card to filter questions by phase. Click again to show all. The number shows how many questions are loaded per phase.', title: 'Round Filters', skipBeacon: true },
+  { target: '.tour-arena-list', content: 'All questions are listed here with correct answers visible. Click any question to expand and see full options and explanation.', title: 'Question Preview', skipBeacon: true },
+];
+
 const ROUND_COLORS = {
   1: { border: 'border-neon-cyan', text: 'text-neon-cyan', bg: 'bg-neon-cyan/10', hex: '#00F0FF' },
   2: { border: 'border-neon-yellow', text: 'text-neon-yellow', bg: 'bg-neon-yellow/10', hex: '#FFC933' },
   3: { border: 'border-neon-magenta', text: 'text-neon-magenta', bg: 'bg-neon-magenta/10', hex: '#FF007F' },
+  4: { border: 'border-neon-green', text: 'text-neon-green', bg: 'bg-neon-green/10', hex: '#00FF66' },
+  5: { border: 'border-neon-red', text: 'text-neon-red', bg: 'bg-neon-red/10', hex: '#FF5E52' },
 };
 
 export default function AdminArenaPage() {
   const params = useParams();
   const quizCode = params?.quizCode;
+  const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterRound, setFilterRound] = useState(0);
   const [expandedId, setExpandedId] = useState(null);
+  const [runTour, setRunTour] = useState(false);
 
-  useEffect(() => { fetchQuestions(); }, []);
+  useEffect(() => {
+    if (!localStorage.getItem('tour_arena')) {
+      localStorage.setItem('tour_arena', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    const { status, type, step } = data;
+    if (type === 'step:before' && step?.target) {
+      const el = document.querySelector(step.target);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_arena', 'true');
+      setRunTour(false);
+    }
+  };
+
+  useEffect(() => { 
+    fetchQuizSession();
+    fetchQuestions(); 
+  }, []);
+
+  async function fetchQuizSession() {
+    try {
+      const res = await fetch(`/api/game/status?quizCode=${quizCode}`);
+      const data = await res.json();
+      if (res.ok && data.session) {
+        setSession(data.session);
+      }
+    } catch (err) {
+      console.error('Failed to fetch session', err);
+    }
+  }
 
   async function fetchQuestions() {
     try {
@@ -41,14 +84,30 @@ export default function AdminArenaPage() {
   }
 
   const filtered = filterRound === 0 ? questions : questions.filter(q => q.round === filterRound);
-  const counts = {
-    1: questions.filter(q => q.round === 1).length,
-    2: questions.filter(q => q.round === 2).length,
-    3: questions.filter(q => q.round === 3).length,
+  
+  const counts = {};
+  const rounds = session?.settings?.rounds || [];
+  rounds.forEach(r => {
+    counts[r.roundNumber] = questions.filter(q => q.round === r.roundNumber).length;
+  });
+
+  const getRoundLabel = (roundNum) => {
+    const r = rounds.find(x => x.roundNumber === roundNum);
+    return r ? r.roundName : `Phase 0${roundNum}`;
   };
 
   return (
     <div className="min-h-screen relative bg-[#020202] text-gray-200 overflow-hidden font-body">
+      <Joyride
+        steps={arenaTourSteps}
+        run={runTour}
+        callback={handleTourCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        disableScrolling={true}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       {/* Background */}
       <div className="absolute inset-0 bg-[url('/images/stardust.png')] opacity-10 mix-blend-screen pointer-events-none" />
       <div className="cyber-grid absolute inset-0 pointer-events-none" />
@@ -58,7 +117,7 @@ export default function AdminArenaPage() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-dark-950/90 backdrop-blur-xl border-b border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Link href={`/host/${quizCode}/admin`} className="font-display font-bold text-[10px] text-gray-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest bg-white/5 px-6 py-2.5 rounded-full border border-white/5 hover:bg-white/10">
+          <Link href={`/host/${quizCode}/admin`} className="font-display font-bold text-[10px] text-gray-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest bg-white/5 px-6 py-2.5 rounded-full border border-white/5 hover:bg-white/10 tour-arena-back">
             <span className="text-neon-cyan text-lg leading-none -mt-1">←</span> ADMIN HQ
           </Link>
 
@@ -77,16 +136,17 @@ export default function AdminArenaPage() {
       <div className="max-w-[1400px] mx-auto px-6 py-10 relative z-10">
 
         {/* Round filter tabs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          {[1, 2, 3].map(r => {
-            const c = ROUND_COLORS[r];
+        <div className="flex flex-wrap justify-center gap-4 mb-10 tour-arena-filters">
+          {rounds.map(round => {
+            const r = round.roundNumber;
+            const c = ROUND_COLORS[r] || ROUND_COLORS[1];
             const active = filterRound === r;
             return (
               <button key={r} onClick={() => setFilterRound(active ? 0 : r)}
-                className={`glass-panel p-6 rounded-[2rem] text-center transition-all border ${active ? `${c.border} ${c.bg} scale-[1.02] shadow-[0_0_30px_rgba(0,0,0,0.3)]` : 'border-white/5 hover:border-white/20'}`}>
-                <div className={`font-display font-black text-5xl mb-2 ${active ? c.text : 'text-white'}`}>{counts[r]}</div>
+                className={`flex-1 min-w-[280px] max-w-[400px] glass-panel p-6 rounded-[2rem] text-center transition-all border ${active ? `${c.border} ${c.bg} scale-[1.02] shadow-[0_0_30px_rgba(0,0,0,0.3)]` : 'border-white/5 hover:border-white/20'}`}>
+                <div className={`font-display font-black text-5xl mb-2 ${active ? c.text : 'text-white'}`}>{counts[r] || 0}</div>
                 <div className="font-mono text-[10px] text-gray-400 tracking-[0.3em] uppercase">PHASE 0{r}</div>
-                <div className={`font-body text-xs font-bold mt-1 tracking-widest ${active ? 'text-white' : 'text-gray-500'}`}>{ROUND_LABELS[r]}</div>
+                <div className={`font-body text-xs font-bold mt-1 tracking-widest ${active ? 'text-white' : 'text-gray-500'} uppercase`}>{getRoundLabel(r)}</div>
               </button>
             );
           })}
@@ -110,7 +170,7 @@ export default function AdminArenaPage() {
 
         {/* Questions list */}
         {!loading && !error && (
-          <div className="space-y-4">
+          <div className="space-y-4 tour-arena-list">
             <div className="font-mono text-[10px] text-gray-500 tracking-[0.3em] mb-6 border-b border-white/5 pb-4 flex items-center justify-between uppercase">
               <span>{filterRound ? `PHASE 0${filterRound} QUESTIONS` : 'ALL QUESTIONS'}</span>
               <span className="bg-dark-950 px-4 py-1 border border-white/5 rounded-full">{filtered.length} NODES</span>
@@ -151,7 +211,7 @@ export default function AdminArenaPage() {
                         {q.question}
                       </div>
                       <div className="font-mono text-[10px] text-gray-500 tracking-widest uppercase">
-                        {ROUND_LABELS[q.round]} • {q.basePoints} pts
+                        {getRoundLabel(q.round)} • {q.basePoints} pts
                       </div>
                     </div>
 

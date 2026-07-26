@@ -1,14 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
 import {
   Shield, Trophy, Zap, RefreshCw, Activity, 
   ChevronRight, Lock, Settings, Plus, Trash2, CheckCircle2,
   ArrowLeft, Layers, Users, Globe, Key, AlertCircle, Copy, Sparkles, ArrowRight, Radio
 } from 'lucide-react';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 import { Inter, Playfair_Display } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -33,6 +37,19 @@ const inputCls = `
 `;
 const labelCls = "block text-[11px] font-bold tracking-[0.15em] uppercase text-white/50 mb-3";
 
+const hostTourSteps = [
+  { target: '.tour-host-home', content: 'Click here anytime to return to the main portal without losing your progress.', title: 'Portal Home', skipBeacon: true },
+  { target: '.tour-host-steps', content: 'This wizard has 5 phases. Complete each phase in order — General Info, Parameters, Rounds, Authorization, and Review.', title: 'Setup Phases', skipBeacon: true },
+  { target: '.tour-host-progress', content: 'This bar shows your overall progress through the tournament setup. It fills up as you advance through each phase.', title: 'Progress Tracker', skipBeacon: true },
+  { target: '.tour-host-form', content: 'Fill in the required fields for each phase here. Fields marked with * are mandatory.', title: 'Configuration Panel', skipBeacon: true },
+  { target: '.tour-host-nav', content: 'Use Continue to advance to the next phase, or Back to revise a previous step. The final phase launches your tournament cluster.', title: 'Navigation Controls', skipBeacon: true },
+  { target: '.tour-s1-name', content: 'Give your tournament a memorable name. This will be displayed to all participants during the event. This field is required.', title: 'Phase 01 — Tournament Name', skipBeacon: true },
+  { target: '.tour-s1-desc', content: 'Optionally describe your event — theme, scope, and target audience. Helps participants understand the context.', title: 'Phase 01 — Description', skipBeacon: true },
+  { target: '.tour-s1-org', content: 'Enter your organization or institution name. This appears on the arena branding. Completely optional.', title: 'Phase 01 — Organization', skipBeacon: true },
+];
+
+
+
 export default function HostSetupWizard() {
   const router = useRouter();
   const [step, setStep]       = useState(1);
@@ -40,6 +57,32 @@ export default function HostSetupWizard() {
   const [error, setError]     = useState('');
   const [copied, setCopied]   = useState(false);
   const [createdCode, setCreatedCode] = useState('');
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    // Clean up all stale tour keys from previous buggy sessions
+    ['tour_host_step_1','tour_host_step_2','tour_host_step_3',
+     'tour_host_step_4','tour_host_step_5',
+     'tour_phase_1','tour_phase_2','tour_phase_3','tour_phase_4','tour_phase_5'
+    ].forEach(k => localStorage.removeItem(k));
+
+    if (localStorage.getItem('tour_host_setup') !== 'true') {
+      localStorage.setItem('tour_host_setup', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    const { status, action, type, step: tourStep } = data;
+    if (type === 'step:before' && tourStep?.target) {
+      const el = document.querySelector(tourStep.target);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (['finished', 'skipped'].includes(status) || ['skip', 'close'].includes(action)) {
+      localStorage.setItem('tour_host_setup', 'true');
+      setRunTour(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     quizName: '',
@@ -127,6 +170,17 @@ export default function HostSetupWizard() {
 
   return (
     <div className={`min-h-screen bg-[#020202] text-white selection:bg-[#4285F4] selection:text-white ${inter.variable} ${playfair.variable} font-sans flex flex-col relative`}>
+
+      <Joyride
+        steps={hostTourSteps}
+        run={runTour}
+        callback={handleTourCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        disableScrolling={true}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       <style dangerouslySetInnerHTML={{__html: `
         .font-serif { font-family: var(--font-playfair), serif; }
         .noise-overlay {
@@ -151,18 +205,13 @@ export default function HostSetupWizard() {
       {/* ── HEADER ── */}
       <header className="relative z-20 flex items-center justify-between px-8 py-5 border-b border-white/10 bg-black/40 backdrop-blur-xl">
         <div className="flex items-center gap-6">
-          <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all">
+          <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all tour-host-home">
             <ArrowLeft size={14} />
             Portal Home
           </Link>
           <div className="w-px h-6 bg-white/10 hidden sm:block" />
           <div className="hidden sm:flex items-center gap-3 text-[13px] font-bold text-white/60 tracking-widest uppercase">
-            <div className="flex gap-1 items-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#4285F4] shadow-[0_0_8px_#4285F4]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#EA4335] shadow-[0_0_8px_#EA4335]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FBBC05] shadow-[0_0_8px_#FBBC05]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#34A853] shadow-[0_0_8px_#34A853]"></div>
-            </div>
+            <img src="/gdg-logo.png" alt="GDG" className="h-5 w-auto object-contain" />
             Tournament Wizard
           </div>
         </div>
@@ -180,7 +229,7 @@ export default function HostSetupWizard() {
 
           {/* ── STEP INDICATOR ── */}
           {step < 6 && (
-            <div className="mb-12">
+            <div className="mb-12 tour-host-steps">
               {/* Step pills */}
               <div className="flex items-center gap-0 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                 {stepMeta.map((s, i) => {
@@ -210,7 +259,7 @@ export default function HostSetupWizard() {
               </div>
 
               {/* Progress bar */}
-              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner tour-host-progress">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -223,7 +272,7 @@ export default function HostSetupWizard() {
           )}
 
           {/* ── FORM CARD ── */}
-          <div className="rounded-[32px] bg-white/[0.04] border border-white/10 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] relative overflow-hidden transition-all duration-500" style={{ borderColor: `${meta.accent}60` }}>
+          <div className="rounded-[32px] bg-white/[0.04] border border-white/10 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] relative overflow-hidden transition-all duration-500 tour-host-form" style={{ borderColor: `${meta.accent}60` }}>
             
             {/* Card ambient glow inside */}
             <div className="absolute top-[-30%] left-[-20%] w-[70%] h-[70%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700" style={{ backgroundColor: `${meta.accent}15` }}></div>
@@ -249,7 +298,7 @@ export default function HostSetupWizard() {
                     <StepHeader n="01" title="General Information" desc="Define the core identity and metadata for your tournament session." accent={meta.accent} />
 
                     <div className="flex flex-col gap-8">
-                      <div>
+                      <div className="tour-s1-name">
                         <label className={labelCls}>
                           Tournament Name <span style={{ color: meta.accent }}>*</span>
                         </label>
@@ -260,7 +309,7 @@ export default function HostSetupWizard() {
                           className={inputCls}
                         />
                       </div>
-                      <div>
+                      <div className="tour-s1-desc">
                         <label className={labelCls}>Description <OptTag /></label>
                         <textarea rows={3} value={formData.description}
                           onChange={e => set('description', e.target.value)}
@@ -268,7 +317,7 @@ export default function HostSetupWizard() {
                           className={inputCls} style={{ resize: 'none' }}
                         />
                       </div>
-                      <div>
+                      <div className="tour-s1-org">
                         <label className={labelCls}>Organization / Institution <OptTag /></label>
                         <div className="relative">
                           <Globe size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30" />
@@ -290,7 +339,7 @@ export default function HostSetupWizard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                      <ParamCard label="Players Per Team" icon={<Users size={18} className="text-[#4285F4]" />}>
+                      <ParamCard label="Players Per Team" icon={<Users size={18} className="text-[#4285F4]" />} className="tour-s2-team-size">
                         <div className="flex gap-3">
                           {[1,2,3,4,5].map(n => (
                             <button key={n} type="button" onClick={() => set('playersPerTeam', n)}
@@ -303,38 +352,38 @@ export default function HostSetupWizard() {
                         </div>
                       </ParamCard>
 
-                      <ParamCard label="Max Registered Teams" icon={<Trophy size={18} className="text-[#EA4335]" />}>
+                      <ParamCard label="Max Registered Teams" icon={<Trophy size={18} className="text-[#EA4335]" />} className="tour-s2-max-teams">
                         <input type="number" min={1} max={500} value={formData.maxTeams}
                           onChange={e => set('maxTeams', parseInt(e.target.value) || 50)}
                           className={inputCls} style={{ fontFamily: 'monospace', fontSize: 20, fontWeight: 800 }}
                         />
                       </ParamCard>
 
-                      <ParamCard label="Late Team Join" icon={<Shield size={18} className="text-[#FBBC05]" />}>
-                        <TogglePair
-                          opts={[{ l: 'Allowed', v: true }, { l: 'Locked', v: false }]}
-                          value={formData.allowLateJoin} onChange={v => set('allowLateJoin', v)}
-                          activeColor="#FBBC05"
-                        />
-                      </ParamCard>
+                      <ParamCard label="Late Team Join" icon={<Shield size={18} className="text-[#FBBC05]" />} className="tour-s2-late-join">
+                          <TogglePair
+                            opts={[{ l: 'Allowed', v: true }, { l: 'Locked', v: false }]}
+                            value={formData.allowLateJoin} onChange={v => set('allowLateJoin', v)}
+                            activeColor="#FBBC05"
+                          />
+                        </ParamCard>
 
-                      <ParamCard label="Re-Attempt Sessions" icon={<RefreshCw size={18} className="text-[#34A853]" />}>
-                        <TogglePair
-                          opts={[{ l: 'Yes', v: true }, { l: 'No', v: false }]}
-                          value={formData.allowReAttempt} onChange={v => set('allowReAttempt', v)}
-                          activeColor="#34A853"
-                        />
-                      </ParamCard>
+                        <ParamCard label="Re-Attempt Sessions" icon={<RefreshCw size={18} className="text-[#34A853]" />}>
+                          <TogglePair
+                            opts={[{ l: 'Yes', v: true }, { l: 'No', v: false }]}
+                            value={formData.allowReAttempt} onChange={v => set('allowReAttempt', v)}
+                            activeColor="#34A853"
+                          />
+                        </ParamCard>
 
-                      <ParamCard label="Time Bonus Scoring" icon={<Zap size={18} className="text-[#4285F4]" />}>
-                        <TogglePair
-                          opts={[{ l: 'Active', v: true }, { l: 'Off', v: false }]}
-                          value={formData.timeBonusEnabled} onChange={v => set('timeBonusEnabled', v)}
-                          activeColor="#4285F4"
-                        />
-                      </ParamCard>
+                        <ParamCard label="Time Bonus Scoring" icon={<Zap size={18} className="text-[#4285F4]" />}>
+                          <TogglePair
+                            opts={[{ l: 'Active', v: true }, { l: 'Off', v: false }]}
+                            value={formData.timeBonusEnabled} onChange={v => set('timeBonusEnabled', v)}
+                            activeColor="#4285F4"
+                          />
+                        </ParamCard>
 
-                      <ParamCard label="Session Language" icon={<Globe size={18} className="text-[#EA4335]" />}>
+                      <ParamCard label="Session Language" icon={<Globe size={18} className="text-[#EA4335]" />} className="tour-s2-language">
                         <select value={formData.quizLanguage} onChange={e => set('quizLanguage', e.target.value)}
                           className={inputCls} style={{ background: '#111' }}>
                           <option value="en">English (EN)</option>
@@ -355,14 +404,14 @@ export default function HostSetupWizard() {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
                       <StepHeader n="03" title="Rounds Designer" desc={`Configure up to 5 competitive rounds. ${formData.rounds.length}/5 active.`} accent={meta.accent} noMargin />
                       <button type="button" onClick={addRound}
-                        className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold tracking-wide bg-white/10 border border-white/20 text-white hover:bg-white text-hover-black hover:text-black transition-all shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                        className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold tracking-wide bg-white/10 border border-white/20 text-white hover:bg-white text-hover-black hover:text-black transition-all shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] tour-s3-add">
                         <Plus size={16} />Add Round
                       </button>
                     </div>
 
                     <div className="flex flex-col gap-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                       {formData.rounds.map((round, idx) => (
-                        <div key={idx} className="p-5 sm:p-8 rounded-[24px] bg-white/[0.03] border border-white/10 relative overflow-hidden shadow-xl hover:bg-white/[0.05] transition-colors">
+                        <div key={idx} className={`p-5 sm:p-8 rounded-[24px] bg-white/[0.03] border border-white/10 relative overflow-hidden shadow-xl hover:bg-white/[0.05] transition-colors ${idx === 0 ? 'tour-s3-round' : ''}`}>
                           {/* Round header */}
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-8">
                             <div className="flex items-center gap-4">
@@ -428,14 +477,14 @@ export default function HostSetupWizard() {
                     <StepHeader n="04" title="Authorization" desc="Set an organizer password to control live sessions and question payloads." accent={meta.accent} />
 
                     <div className="max-w-[550px] flex flex-col gap-8">
-                      <div className="flex items-start gap-5 p-6 rounded-[20px] bg-[#34A853]/10 border border-[#34A853]/30 mb-2 shadow-[inset_0_1px_1px_rgba(52,168,83,0.2)]">
+                      <div className="flex items-start gap-5 p-6 rounded-[20px] bg-[#34A853]/10 border border-[#34A853]/30 mb-2 shadow-[inset_0_1px_1px_rgba(52,168,83,0.2)] tour-s4-info">
                         <Lock size={24} className="text-[#34A853] mt-1 flex-shrink-0" />
                         <p className="text-[15px] font-medium text-white/80 leading-relaxed m-0">
                           This password is required to manage the live session, upload questions,
                           and enforce participant controls during the tournament.
                         </p>
                       </div>
-                      <div>
+                      <div className="tour-s4-pass">
                         <label className={labelCls}>Organizer Password <span style={{ color: meta.accent }}>*</span> <OptTag text="MIN 6 CHARS" /></label>
                         <input type="password" value={formData.organizerPassword}
                           onChange={e => { set('organizerPassword', e.target.value); setError(''); }}
@@ -462,7 +511,7 @@ export default function HostSetupWizard() {
                     <StepHeader n="05" title="Review & Launch" desc="Verify your configuration before generating the live tournament cluster." accent={meta.accent} />
 
                     <div className="flex flex-col gap-6 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 tour-s5-summary">
                         {[
                           { k: 'Tournament',  v: formData.quizName },
                           { k: 'Organizer',   v: formData.organizerName || 'Anonymous' },
@@ -478,7 +527,7 @@ export default function HostSetupWizard() {
                         ))}
                       </div>
 
-                      <div className="p-5 sm:p-7 rounded-[24px] bg-white/[0.03] border border-white/10 mt-3 shadow-xl">
+                      <div className="p-5 sm:p-7 rounded-[24px] bg-white/[0.03] border border-white/10 mt-3 shadow-xl tour-s5-rounds">
                         <div className="text-[13px] font-bold text-white/60 uppercase tracking-widest mb-6 flex items-center gap-3">
                           <Layers size={18} className="text-[#4285F4]" />Rounds Configuration
                         </div>
@@ -543,7 +592,7 @@ export default function HostSetupWizard() {
 
               {/* ── NAV BUTTONS ── */}
               {step < 6 && (
-                <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-14 pt-10 border-t border-white/10 gap-4 sm:gap-0">
+                <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-14 pt-10 border-t border-white/10 gap-4 sm:gap-0 tour-host-nav">
                   <button type="button" onClick={() => { setError(''); setStep(s => s - 1); }}
                     disabled={step === 1}
                     className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[15px] font-bold transition-all ${
@@ -605,9 +654,9 @@ function OptTag({ text = 'OPTIONAL' }) {
   return <span className="text-[10px] font-bold text-white/30 tracking-[0.15em] ml-2 bg-white/5 px-2 py-1 rounded-md">({text})</span>;
 }
 
-function ParamCard({ label, icon, children }) {
+function ParamCard({ label, icon, children, className = '' }) {
   return (
-    <div className="p-6 rounded-[20px] bg-white/[0.03] hover:bg-white/[0.06] transition-colors border border-white/10 hover:border-white/20 shadow-lg">
+    <div className={`p-6 rounded-[20px] bg-white/[0.03] hover:bg-white/[0.06] transition-colors border border-white/10 hover:border-white/20 shadow-lg ${className}`}>
       <div className="flex items-center justify-between mb-5">
         <label className="text-[11px] font-bold tracking-[0.15em] text-white/50 uppercase">{label}</label>
         <div className="p-2 rounded-lg bg-white/5 border border-white/10">

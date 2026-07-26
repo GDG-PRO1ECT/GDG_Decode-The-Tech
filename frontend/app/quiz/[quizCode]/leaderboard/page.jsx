@@ -79,7 +79,7 @@ export default function LeaderboardPage() {
       <div className="absolute inset-0 bg-[url('/images/stardust.png')] opacity-[0.03] pointer-events-none mix-blend-screen z-0"></div>
       <div className="cyber-grid absolute inset-0 pointer-events-none z-0"></div>
       <div className="premium-watermark"></div>
-      <div className="gdg-side-hud"></div>
+
 
       <div className="ambient-orb orb-blue z-0 opacity-40"></div>
       <div className="ambient-orb orb-yellow z-0 opacity-40"></div>
@@ -178,7 +178,7 @@ export default function LeaderboardPage() {
               <div className="grid grid-cols-12 gap-4 px-8 py-5 font-mono text-[10px] text-gray-500 tracking-[0.4em] border-b border-white/20 mb-6 clip-angled bg-dark-900/80 sticky top-[98px] z-30 shadow-[0_10px_30px_rgba(0,0,0,0.6)] uppercase">
                 <div className="col-span-1 text-center">RNK</div>
                 <div className="col-span-4 md:col-span-3 pl-4 border-l border-white/10">NODE_ID</div>
-                <div className="col-span-3 hidden md:block text-center border-l border-white/10">OPERATORS</div>
+                <div className="col-span-3 hidden md:block lg:col-span-2 text-center border-l border-white/10">OPERATORS</div>
                 <div className="col-span-2 hidden lg:block text-center text-gray-500 border-l border-white/10">LAST_SYNC</div>
                 <div className="col-span-1 hidden lg:block text-right text-gdg-blue font-bold border-l border-white/10">P1</div>
                 <div className="col-span-1 hidden lg:block text-right text-gdg-yellow font-bold border-l border-white/10">P2</div>
@@ -266,7 +266,7 @@ export default function LeaderboardPage() {
                       </div>
 
                       {/* Players */}
-                      <div className="col-span-3 hidden md:block z-10 text-center border-l border-white/5">
+                      <div className="col-span-3 hidden md:block lg:col-span-2 z-10 text-center border-l border-white/5">
                         <div className="font-mono text-[9px] text-gray-400 bg-dark-950 inline-block px-4 py-2 border border-white/10 truncate max-w-full uppercase tracking-[0.3em] clip-hex">
                           {team.players.join(' | ')}
                         </div>

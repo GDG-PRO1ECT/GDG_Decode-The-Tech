@@ -7,6 +7,10 @@ import { ShieldAlert, Send, Lock, Cpu, Flag, Zap, Gauge, Timer } from 'lucide-re
 import { getSocket } from '@/lib/socket';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useAnimationFrame } from 'framer-motion';
 import LeaderboardPage from '@/app/quiz/[quizCode]/leaderboard/page';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 
 // --- Standby State: Powered Down Hypercar Console ---
 // --- Standby State: Powered Down Hypercar Console ---
@@ -318,6 +322,28 @@ export default function TeamClient({ initialTeam, initialSession }) {
   const [team, setTeam] = useState(initialTeam);
   const [session, setSession] = useState(initialSession);
   const [isTimeExpired, setIsTimeExpired] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+  const [runIgnitionTour, setRunIgnitionTour] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_team')) {
+      localStorage.setItem('tour_team', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_team', 'true');
+      setRunTour(false);
+    }
+  };
+
+  const teamTourSteps = [
+    { target: '.tour-team-status', content: 'This console displays your teams current synchronization status and readiness.', title: 'Status Console', skipBeacon: true },
+    { target: '.tour-team-intel', content: 'Track specifications and race regulations are listed here.', title: 'Intel', skipBeacon: true }
+  ];
 
   useEffect(() => {
     if (!session?.roundEndTime) {
@@ -351,9 +377,20 @@ export default function TeamClient({ initialTeam, initialSession }) {
         });
       }
     };
+    
+    const onFullLeaderboardUpdate = (fullLeaderboard) => {
+      const top10 = fullLeaderboard.slice(0, 10);
+      const myTeam = fullLeaderboard.find(t => t.teamId === teamId);
+      let dietBoard = top10;
+      if (myTeam && !top10.find(t => t.teamId === teamId)) {
+        dietBoard = [...top10, myTeam];
+      }
+      onLeaderboardUpdate(dietBoard);
+    };
 
     socket.on('session_update', onSessionUpdate);
     socket.on('leaderboard_update', onLeaderboardUpdate);
+    socket.on('full_leaderboard_update', onFullLeaderboardUpdate);
 
     // Fallback polling (much slower)
     const interval = setInterval(() => {
@@ -368,6 +405,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
     return () => {
       socket.off('session_update', onSessionUpdate);
       socket.off('leaderboard_update', onLeaderboardUpdate);
+      socket.off('full_leaderboard_update', onFullLeaderboardUpdate);
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
@@ -434,6 +472,15 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
   const answeredCountCurrentRound = team?.answeredQuestions?.[`round${currentRound}`]?.length || 0;
   const hasFinishedCurrentRound = briefingQuestions.length > 0 && answeredCountCurrentRound >= briefingQuestions.length;
+
+  useEffect(() => {
+    if (isActive && !hasFinishedCurrentRound && !isTimeExpired) {
+      if (!localStorage.getItem('tour_ignition')) {
+        localStorage.setItem('tour_ignition', 'true');
+        setRunIgnitionTour(true);
+      }
+    }
+  }, [isActive, hasFinishedCurrentRound, isTimeExpired]);
 
   // Analysis section: a round button appears when the team has ANY answers for that round
   // AND the round is in the past OR the session is finished
@@ -550,6 +597,30 @@ export default function TeamClient({ initialTeam, initialSession }) {
   return (
     <div className="min-h-screen w-full bg-[#030303] text-white font-sans flex flex-col relative selection:bg-red-600/30 overflow-y-auto">
       <style>{globalStyles}</style>
+      <Joyride 
+        steps={teamTourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        scrollOffset={150}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
+      <Joyride 
+        steps={[{ target: '.tour-ignition-btn', content: 'Click to start the game!', title: 'Ignition', skipBeacon: true }]}
+        run={runIgnitionTour}
+        callback={(data) => {
+          if (['finished', 'skipped'].includes(data.status)) {
+            setRunIgnitionTour(false);
+          }
+        }}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        scrollOffset={150}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
 
       {/* Brutalist Background */}
       <div className="absolute inset-0 bg-[url('/images/carbon-fibre.png')] opacity-20 pointer-events-none z-0" />
@@ -728,7 +799,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
         </AnimatePresence>
 
         {/* Speedometer Section */}
-        <div id="telemetry-link" className="w-full flex items-center justify-center min-h-[400px] md:min-h-[500px]">
+        <div id="telemetry-link" className="w-full flex items-center justify-center min-h-[400px] md:min-h-[500px] tour-team-status">
           <AnimatePresence mode="wait">
             {isActive && !isTimeExpired ? (
               <ActiveHyperSpeedometer key="speedometer" session={session} team={team} />
@@ -739,7 +810,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
         </div>
 
         {/* Mission Briefing Section (Racing Style) */}
-        <div id="briefing-section" className="w-full max-w-5xl px-6 mt-20 relative">
+        <div id="briefing-section" className="w-full max-w-5xl px-6 mt-20 relative tour-team-intel">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/checkered-flag.png')] opacity-5 pointer-events-none mix-blend-overlay" />
 
           <div className="flex items-center gap-6 mb-12">
@@ -764,21 +835,21 @@ export default function TeamClient({ initialTeam, initialSession }) {
               <div className="space-y-6 relative z-10">
                 <div className="flex justify-between items-center border-b border-white/10 pb-4 group-hover:border-red-600/30 transition-colors">
                   <span className="font-mono text-xs text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Flag size={14} className="text-gray-500" /> Checkpoints
+                    <Flag size={14} className="text-gray-500" /> No of questions
                   </span>
                   <span className="font-display font-black italic text-2xl text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{briefingQuestions.length}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-white/10 pb-4 group-hover:border-red-600/30 transition-colors">
                   <span className="font-mono text-xs text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Zap size={14} className="text-gray-500" /> Circuit Type
+                    <Zap size={14} className="text-gray-500" /> Type of question
                   </span>
                   <span className="font-display font-black italic text-xl text-white">
-                    {briefingQuestions.some(q => q.type === 'match') ? 'HYBRID' : 'SPRINT'}
+                    {briefingQuestions.length > 0 ? (briefingQuestions[0].type === 'mcq' ? 'Multiple Choice' : briefingQuestions[0].type === 'match' ? 'Matching' : briefingQuestions[0].type.toUpperCase()) : 'MIXED'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-b border-white/10 pb-4 group-hover:border-red-600/30 transition-colors">
                   <span className="font-mono text-xs text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Timer size={14} className="text-gray-500" /> Time Limit
+                    <Timer size={14} className="text-gray-500" /> Time of dedicated round
                   </span>
                   <span className="font-display font-black italic text-2xl text-white">
                     {Math.floor((session?.roundDurations?.[`round${session?.currentRound || 1}`] || (session?.currentRound === 3 ? 1500 : 1200)) / 60)} MIN
@@ -951,7 +1022,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[500px] px-6 z-50"
+        className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[500px] px-6 z-50 tour-ignition-btn"
       >
         <button
           onClick={() => { if (isActive && !hasFinishedCurrentRound && !isTimeExpired) router.push(`/quiz/${quizCode}/play/${teamId}`); }}

@@ -2,12 +2,12 @@ import Team from './models/Team.js';
 import { getQuiz } from './sessionCache.js';
 
 export function getDietLeaderboard(leaderboard, teamId) {
-  const top8 = leaderboard.slice(0, 8);
+  const top10 = leaderboard.slice(0, 10);
   const myTeam = leaderboard.find(t => t.teamId === teamId);
-  if (myTeam && !top8.find(t => t.teamId === teamId)) {
-    return [...top8, myTeam];
+  if (myTeam && !top10.find(t => t.teamId === teamId)) {
+    return [...top10, myTeam];
   }
-  return top8;
+  return top10;
 }
 
 let broadcastTimers = {};
@@ -67,11 +67,11 @@ export async function broadcastUpdate(quizCode) {
       // Send top 20 to the public display board
       global.io.to(`display_board_${quizCode}`).emit('leaderboard_update', leaderboard.slice(0, 20));
 
-      // Send personalized 'diet' leaderboard (top 8 + own team) to individual team rooms
-      // This reduces bandwidth from O(N^2) to O(N) where N is number of teams
-      leaderboard.forEach(team => {
-        global.io.to(`team_${team.teamId}`).emit('leaderboard_update', getDietLeaderboard(leaderboard, team.teamId));
-      });
+      // Broadcast full leaderboard to the quiz room.
+      // The client will calculate the "Top 10 + self" diet leaderboard.
+      // This reduces backend CPU pressure from O(N) to O(1) for high scale traffic.
+      global.io.to(`quiz_${quizCode}`).emit('full_leaderboard_update', leaderboard);
+      
     } catch (err) {
       console.error('Broadcast update error:', err);
     }

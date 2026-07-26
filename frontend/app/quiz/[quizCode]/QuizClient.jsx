@@ -4,27 +4,49 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 
 const GdgLogo = ({ className = "w-8 h-8" }) => (
   <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain`} />
 );
 
-export default function QuizClient({ quizName }) {
+export default function QuizClient({ quizName, playersPerTeam = 3, rounds = [] }) {
   const params = useParams();
   const quizCode = params?.quizCode;
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('join');
+  const [activeTab, setActiveTab] = useState('register');
   const [teamId, setTeamId] = useState('');
   
   const [regForm, setRegForm] = useState({
-    teamName: '', players: ['', '', '']
+    teamName: '', players: Array(playersPerTeam).fill('')
   });
   const [registeredTeamId, setRegisteredTeamId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
+  const [runTour, setRunTour] = useState(false);
+
   useEffect(() => {
-    // any client-only side effects
+    if (!localStorage.getItem('tour_lobby')) {
+      localStorage.setItem('tour_lobby', 'true');
+      setRunTour(true);
+    }
   }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_lobby', 'true');
+      setRunTour(false);
+    }
+  };
+
+  const lobbyTourSteps = [
+    { target: '.tour-lobby-tabs', content: 'Use these tabs to either Uplink into an existing session or register as a New Node.', title: 'Connection Options', skipBeacon: true },
+    { target: '.tour-lobby-form', content: 'Enter team name and members name.', title: 'Registration Form', skipBeacon: true }
+  ];
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } } };
   const itemVariants = { hidden: { opacity: 0, x: -50, skewX: 10 }, show: { opacity: 1, x: 0, skewX: 0, transition: { type: "spring", stiffness: 60, damping: 20 } } };
@@ -58,11 +80,21 @@ export default function QuizClient({ quizName }) {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-dark-950 text-gray-200 font-body flex flex-col selection:bg-gdg-blue/30 selection:text-white">
+      <Joyride 
+        steps={lobbyTourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        scrollOffset={150}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[url('/images/stardust.png')] opacity-[0.03] pointer-events-none mix-blend-screen z-0"></div>
       <div className="cyber-grid absolute inset-0 pointer-events-none z-0"></div>
       
-      <div className="gdg-side-hud"></div>
+
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-[2px] bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.1)] z-0 rotate-12"></div>
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[2px] h-full bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.1)] z-0 rotate-12"></div>
 
@@ -118,16 +150,20 @@ export default function QuizClient({ quizName }) {
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
-            {[
-              { title: 'PHASE 01: DECRYPT', color: 'gdg-blue' },
-              { title: 'PHASE 02: ANALYZE', color: 'gdg-yellow' },
-              { title: 'PHASE 03: REVERSE', color: 'gdg-red' },
-            ].map((f, i) => (
-              <div key={i} className={`clip-angled px-6 py-2.5 bg-dark-900 border border-${f.color}/30 text-white font-display text-xs md:text-sm tracking-widest font-bold uppercase relative overflow-hidden group`}>
-                <div className={`absolute inset-0 bg-${f.color}/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700`}></div>
-                <span className={`text-${f.color} mr-2 group-hover:animate-pulse`}>/</span> {f.title}
+            {rounds.length > 0 ? rounds.map((round, i) => {
+              const colors = ['gdg-blue', 'gdg-yellow', 'gdg-red', 'gdg-green'];
+              const color = colors[i % colors.length];
+              return (
+                <div key={i} className={`clip-angled px-6 py-2.5 bg-dark-900 border border-${color}/30 text-white font-display text-xs md:text-sm tracking-widest font-bold uppercase relative overflow-hidden group`}>
+                  <div className={`absolute inset-0 bg-${color}/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700`}></div>
+                  <span className={`text-${color} mr-2 group-hover:animate-pulse`}>/</span> PHASE {(i+1).toString().padStart(2, '0')}: {round.roundName}
+                </div>
+              );
+            }) : (
+              <div className="clip-angled px-6 py-2.5 bg-dark-900 border border-white/10 text-gray-500 font-display text-xs md:text-sm tracking-widest font-bold uppercase relative">
+                 WAITING FOR CONFIGURATION...
               </div>
-            ))}
+            )}
           </motion.div>
         </motion.div>
 
@@ -142,7 +178,7 @@ export default function QuizClient({ quizName }) {
             <div className="bg-dark-950 p-8 md:p-12 clip-angled h-full flex flex-col">
               
               {/* Internal Tabs */}
-              <div className="flex gap-4 mb-10 border-b border-white/5 pb-4">
+              <div className="flex gap-4 mb-10 border-b border-white/5 pb-4 tour-lobby-tabs">
                 <button onClick={() => setActiveTab('join')} className={`px-6 py-3 font-display text-sm md:text-base font-black tracking-[0.3em] uppercase transition-all clip-slant ${activeTab === 'join' ? 'bg-gdg-blue/20 text-white border-b-2 border-gdg-blue shadow-[0_0_20px_rgba(66,133,244,0.2)]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
                   {activeTab === 'join' && <span className="text-gdg-blue mr-2">►</span>}UPLINK
                 </button>
@@ -177,7 +213,7 @@ export default function QuizClient({ quizName }) {
 
                   {activeTab === 'register' && (
                     <motion.div key="register" initial={{ opacity: 0, filter: 'blur(10px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, filter: 'blur(10px)' }} className="h-full flex flex-col">
-                      <form onSubmit={handleRegister} className="flex flex-col h-full gap-5">
+                      <form onSubmit={handleRegister} className="flex flex-col h-full gap-5 tour-lobby-form">
                         
                         {msg.text && (
                           <div className={`p-3 font-mono text-xs tracking-widest uppercase border-l-2 ${msg.type === 'error' ? 'border-gdg-red text-gdg-red bg-gdg-red/10' : 'border-gdg-green text-gdg-green bg-gdg-green/10'}`}>
@@ -195,10 +231,10 @@ export default function QuizClient({ quizName }) {
                         </div>
 
                         <div className="space-y-2 mt-2">
-                           <div className="font-mono text-xs text-gray-500 tracking-[0.3em] uppercase">Operatives [3 REQ]</div>
-                          {[0, 1, 2].map(idx => (
+                           <div className="font-mono text-xs text-gray-500 tracking-[0.3em] uppercase">Operatives [{playersPerTeam} REQ]</div>
+                          {Array.from({ length: playersPerTeam }, (_, i) => i).map(idx => (
                             <div key={idx} className="flex items-stretch border border-white/5 bg-dark-800/30 focus-within:border-white/20 transition-colors">
-                              <div className={`w-8 flex items-center justify-center font-mono text-xs border-r border-white/5 bg-dark-900 ${['text-gdg-blue', 'text-gdg-red', 'text-gdg-yellow'][idx]}`}>0{idx+1}</div>
+                              <div className={`w-8 flex items-center justify-center font-mono text-xs border-r border-white/5 bg-dark-900 ${['text-gdg-blue', 'text-gdg-red', 'text-gdg-yellow', 'text-gdg-green'][idx % 4]}`}>{(idx+1).toString().padStart(2, '0')}</div>
                               <input required type="text" placeholder="NAME_ALIAS" value={regForm.players[idx]} onChange={e => { const newP = [...regForm.players]; newP[idx] = e.target.value; setRegForm({...regForm, players: newP}); }} className="w-full bg-transparent px-3 py-2 text-sm font-mono text-white outline-none placeholder:text-gray-700" />
                             </div>
                           ))}
