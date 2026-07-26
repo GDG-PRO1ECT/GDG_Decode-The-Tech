@@ -2,9 +2,19 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(m => m.default || m.Joyride), { ssr: false });
+
+const teamsTourSteps = [
+  { target: '.tour-teams-back', content: 'Return to the main Command Center dashboard at any time.', title: 'Back to Admin', skipBeacon: true },
+  { target: '.tour-teams-actions', content: 'Add teams manually one by one, bulk import via CSV format, export join links, or purge all nodes.', title: 'Team Actions', skipBeacon: true },
+  { target: '.tour-teams-list', content: 'All registered teams appear here. You can view, edit scores, ban, or delete any team node.', title: 'Node Matrix', skipBeacon: true },
+];
 
 const GdgLogo = ({ className = "w-6 h-6" }) => (
   <Image src="/gdg-logo.png" alt="GDG Logo" width={100} height={100} className={`${className} object-contain drop-shadow-md`} />
@@ -26,6 +36,26 @@ export default function AdminTeamsPage() {
   const [showBulk, setShowBulk] = useState(false);
   const [editingScore, setEditingScore] = useState(null);
   const { authenticatedFetch } = useAdminAuth(quizCode);
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_teams')) {
+      localStorage.setItem('tour_teams', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    const { status, type, step } = data;
+    if (type === 'step:before' && step?.target) {
+      const el = document.querySelector(step.target);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_teams', 'true');
+      setRunTour(false);
+    }
+  };
 
   useEffect(() => { 
     if (quizCode) {
@@ -181,6 +211,16 @@ export default function AdminTeamsPage() {
 
   return (
     <div className="min-h-screen relative bg-dark-950 text-gray-200 overflow-hidden font-body selection:bg-gdg-blue/30 selection:text-white">
+      <Joyride
+        steps={teamsTourSteps}
+        run={runTour}
+        callback={handleTourCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        disableScrolling={true}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       <div className="absolute inset-0 bg-[url('/images/stardust.png')] opacity-[0.03] pointer-events-none mix-blend-screen"></div>
       <div className="cyber-grid absolute inset-0 pointer-events-none"></div>
 
@@ -189,7 +229,7 @@ export default function AdminTeamsPage() {
       
       <div className="border-b border-white/5 bg-dark-950/80 backdrop-blur-xl sticky top-0 z-40 shadow-lg">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Link href={`/host/${quizCode}/admin`} className="font-display font-bold text-[10px] text-gray-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest bg-white/5 px-6 py-2.5 rounded-full border border-white/5 hover:bg-white/10">
+          <Link href={`/host/${quizCode}/admin`} className="font-display font-bold text-[10px] text-gray-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest bg-white/5 px-6 py-2.5 rounded-full border border-white/5 hover:bg-white/10 tour-teams-back">
             <span className="text-gdg-blue text-lg leading-none -mt-1">←</span> COMMAND CENTER
           </Link>
           <div className="flex items-center gap-4 bg-dark-900/80 px-6 py-2.5 border border-white/10 rounded-full shadow-inner">
@@ -212,7 +252,7 @@ export default function AdminTeamsPage() {
         </AnimatePresence>
 
         {/* Quick actions */}
-        <div className="flex flex-wrap gap-4 glass-panel p-4 rounded-2xl border border-white/5">
+        <div className="flex flex-wrap gap-4 glass-panel p-4 rounded-2xl border border-white/5 tour-teams-actions">
           <button onClick={() => {setShowManual(!showManual); setShowBulk(false);}} className={`px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest transition-all ${showManual ? 'bg-gdg-blue text-white shadow-[0_0_15px_rgba(66,133,244,0.4)]' : 'bg-white/5 hover:bg-white/10 text-gray-300'}`}>
             + NEW NODE
           </button>
@@ -289,7 +329,7 @@ export default function AdminTeamsPage() {
         </AnimatePresence>
 
         {/* Teams list */}
-        <div className="p-8 rounded-[3rem] glass-panel border border-white/5 shadow-glass bg-gradient-to-b from-dark-900/80 to-dark-950/80">
+        <div className="p-8 rounded-[3rem] glass-panel border border-white/5 shadow-glass bg-gradient-to-b from-dark-900/80 to-dark-950/80 tour-teams-list">
           <div className="font-display font-bold text-white text-lg mb-8 pb-6 border-b border-white/10 tracking-widest flex items-center justify-between">
             <span>REGISTERED NODES</span>
             <span className="font-mono text-[10px] text-gray-400 bg-dark-950 px-4 py-2 rounded-full border border-white/5 shadow-inner uppercase tracking-widest">{teams.length} TOTAL</span>

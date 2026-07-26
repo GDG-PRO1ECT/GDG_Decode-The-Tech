@@ -9,6 +9,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import mammoth from 'mammoth';
+import rateLimit from 'express-rate-limit';
 
 import dbConnect from './lib/mongodb.js';
 import Quiz from './lib/models/Quiz.js';
@@ -75,7 +76,18 @@ function invalidateQuestionCache(quizCode) {
 }
 
 const app = express();
+app.set('trust proxy', 1); // Trust the first proxy (Render/Vercel) so rate limiting works correctly
 app.use(compression());
+
+// Prevent DDoS / Spam clicks from crashing the server
+const apiLimiter = rateLimit({
+  windowMs: 10 * 1000, // 10 seconds
+  max: 30, // Limit each IP to 30 requests per window (averaging 3 requests per second)
+  message: { error: 'Too many requests, please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
 
 // In production, restrict CORS to the Vercel frontend URL (set CORS_ORIGIN env var).
 // In development, allow everything.
@@ -105,6 +117,28 @@ const io = new Server(httpServer, {
 
 global.io = io;
 
+// Memory Leak Prevention (Garbage Collection)
+// Cleans up inactive or finished quizzes from memory every 30 minutes
+setInterval(() => {
+  const now = Date.now();
+  if (global.gameCache) {
+    for (const quizCode of Object.keys(global.gameCache)) {
+      const cacheData = global.gameCache[quizCode];
+      if (cacheData && cacheData.session) {
+        const updatedAt = new Date(cacheData.session.updatedAt || cacheData.session.createdAt || now).getTime();
+        const ageHours = (now - updatedAt) / (1000 * 60 * 60);
+        
+        // Remove if finished for > 2 hours, or inactive for > 12 hours
+        if ((cacheData.session.status === 'finished' && ageHours > 2) || ageHours > 12) {
+          delete global.gameCache[quizCode];
+          invalidateQuestionCache(quizCode);
+          console.log(`[GC] Flushed quiz ${quizCode} from memory to prevent leaks.`);
+        }
+      }
+    }
+  }
+}, 30 * 60 * 1000);
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   
@@ -115,7 +149,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('join_team', ({ teamId, quizCode }) => {
+  socket.on('join_team', async ({ teamId, quizCode }) => {
     socket.join(`team_${teamId}`);
     socket.join(`quiz_${quizCode}`);
     if (global.gameCache[quizCode]) {
@@ -841,35 +875,38 @@ app.post('/api/game/submit', async (req, res) => {
       points = 1; // Standard 1 point per correct answer
     }
 
-    if (!team.answeredQuestions) team.answeredQuestions = {};
-    if (!team.answeredQuestions[roundKey]) team.answeredQuestions[roundKey] = [];
+    const updatedTeam = await Team.findOneAndUpdate(
+      { 
+        _id: team._id, 
+        [`answeredQuestions.${roundKey}.questionId`]: { $ne: String(questionId) }
+      },
+      {
+        $push: {
+          [`answeredQuestions.${roundKey}`]: {
+            questionId: String(questionId),
+            answeredAt: now,
+            correct: isCorrect,
+            points,
+          }
+        },
+        $inc: {
+          [`scores.${roundKey}`]: points,
+          'scores.total': points
+        }
+      },
+      { new: true }
+    );
 
-    team.answeredQuestions[roundKey].push({
-      questionId: String(questionId),
-      answeredAt: now,
-      correct: isCorrect,
-      points,
-    });
-
-    team.scores[roundKey] = (team.scores[roundKey] || 0) + points;
-    team.scores.total = 
-      (team.scores.round1 || 0) + 
-      (team.scores.round2 || 0) + 
-      (team.scores.round3 || 0) + 
-      (team.scores.round4 || 0) + 
-      (team.scores.round5 || 0) + 
-      (team.scores.bonusPoints || 0);
-
-    await team.save();
-
-
+    if (!updatedTeam) {
+      return res.status(400).json({ error: 'Already answered concurrently or team not found' });
+    }
 
     broadcastUpdate(quizCode);
 
     return res.json({
       correct: isCorrect,
       points,
-      totalScore: team.scores.total,
+      totalScore: updatedTeam.scores.total,
     });
   } catch (error) {
     console.error('Submit Answer Error:', error);
@@ -892,6 +929,31 @@ app.get('/api/leaderboard', async (req, res) => {
       return res.status(400).json({ error: 'quizCode is required' });
     }
 
+    // Attempt to serve instantly from memory cache to prevent DB load on global scale
+    if (global.gameCache && global.gameCache[quizCode] && global.gameCache[quizCode].leaderboard) {
+      const cache = global.gameCache[quizCode];
+      const cachedLeaderboard = cache.leaderboard;
+      
+      let targetTeamData = null;
+      if (targetTeamId) {
+        targetTeamData = cachedLeaderboard.find(t => t.teamId === targetTeamId);
+      }
+      
+      let finalLeaderboard = cachedLeaderboard;
+      if (limitNum > 0) {
+        finalLeaderboard = cachedLeaderboard.slice(0, limitNum);
+      }
+      
+      return res.json({
+        leaderboard: finalLeaderboard,
+        session: cache.session,
+        targetTeam: targetTeamData,
+        totalTeams: cachedLeaderboard.length
+      });
+    }
+
+    // Fallback: Re-hydrate from Database if cache was flushed
+    await dbConnect();
     const [teams, session] = await Promise.all([
       Team.find({ quizCode, isActive: true, isDisqualified: { $ne: true } })
         .select('teamId teamName teamNumber players scores answeredQuestions')

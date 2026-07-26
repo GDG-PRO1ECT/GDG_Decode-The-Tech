@@ -4,11 +4,23 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
 import { 
   ArrowLeft, Plus, Trash2, Edit, Check, X, Upload, AlertTriangle, 
   Sparkles, Layers, CheckCircle2, ListFilter, Copy, HelpCircle, 
   FileText, Database, Shield, Activity, RefreshCw 
 } from 'lucide-react';
+
+const Joyride = dynamic(() => import('react-joyride').then(m => m.default || m.Joyride), { ssr: false });
+
+const questionsTourSteps = [
+  { target: '.tour-q-back', content: 'Return to the Admin dashboard (SUDO_CORE).', title: 'Back to Admin', skipBeacon: true },
+  { target: '.tour-q-import', content: 'Import questions in bulk from a DOCX, CSV, or JSON file. The AI parser will extract and format all Q&A pairs automatically.', title: 'Bulk Import', skipBeacon: true },
+  { target: '.tour-q-add', content: 'Manually create a new question. Supports MCQ, Match Pairs, Emoji Clues, and True/False formats.', title: 'Add Question', skipBeacon: true },
+  { target: '.tour-q-validation', content: 'This panel shows how many questions are loaded per round vs. the required count. All rounds must show READY before you can launch the arena.', title: 'Validation Checklist', skipBeacon: true },
+  { target: '.tour-q-list', content: 'All uploaded questions are listed here. You can filter by round, edit, or delete any question.', title: 'Question List', skipBeacon: true },
+];
 
 export default function HostQuestionsPanel() {
   const params = useParams();
@@ -42,6 +54,26 @@ export default function HostQuestionsPanel() {
   const [msgType, setMsgType] = useState('success');
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_questions')) {
+      localStorage.setItem('tour_questions', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    const { status, action, type, step } = data;
+    if (type === 'step:before' && step?.target) {
+      const el = document.querySelector(step.target);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (['finished', 'skipped'].includes(status) || ['skip', 'close'].includes(action)) {
+      localStorage.setItem('tour_questions', 'true');
+      setRunTour(false);
+    }
+  };
 
   useEffect(() => {
     if (quizCode) {
@@ -292,6 +324,16 @@ export default function HostQuestionsPanel() {
 
   return (
     <div className="min-h-screen relative bg-[#020202] text-white font-sans overflow-y-auto selection:bg-white/20 flex flex-col justify-between">
+      <Joyride
+        steps={questionsTourSteps}
+        run={runTour}
+        callback={handleTourCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        disableScrolling={true}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       {/* Ambient background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] bg-blue-600/10 rounded-full blur-[100px] mix-blend-screen" />
@@ -306,7 +348,7 @@ export default function HostQuestionsPanel() {
           <div className="flex items-center gap-3">
             <Link 
               href={`/host/${quizCode}/admin`} 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-mono tracking-wider text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-mono tracking-wider text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all tour-q-back"
             >
               <ArrowLeft size={14} />
               <span>SUDO_CORE DASHBOARD</span>
@@ -322,14 +364,14 @@ export default function HostQuestionsPanel() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <label className="inline-flex items-center gap-2 font-mono text-xs tracking-wider bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 px-4 py-2.5 rounded-xl transition-all uppercase cursor-pointer">
+            <label className="inline-flex items-center gap-2 font-mono text-xs tracking-wider bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 px-4 py-2.5 rounded-xl transition-all uppercase cursor-pointer tour-q-import">
               <Upload size={14} className="text-purple-400" />
               <span>{importing ? 'IMPORTING...' : 'IMPORT DOCS/CSV'}</span>
               <input type="file" accept=".docx,.csv,.json" onChange={handleImport} className="hidden" disabled={importing} />
             </label>
             <button 
               onClick={() => setShowForm(!showForm)} 
-              className="inline-flex items-center gap-2 font-mono font-bold text-xs tracking-wider bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl transition-all uppercase shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+              className="inline-flex items-center gap-2 font-mono font-bold text-xs tracking-wider bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl transition-all uppercase shadow-[0_0_20px_rgba(59,130,246,0.3)] tour-q-add"
             >
               <Plus size={14} />
               <span>NEW QUESTION</span>
@@ -352,7 +394,7 @@ export default function HostQuestionsPanel() {
         )}
 
         {/* Validation Dashboard Checklist */}
-        <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] tour-q-validation">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
             <div className="flex items-center gap-2 font-mono text-xs tracking-wider text-white/60 uppercase">
               <Shield size={16} className="text-emerald-400" />

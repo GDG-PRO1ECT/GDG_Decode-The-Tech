@@ -28,8 +28,7 @@
 }
 
 html, body {
-  height: 100%;
-  scroll-behavior: smooth;
+  min-height: 100vh;
   background-color: var(--dark-950);
   color: #e0e0e0;
   overflow-x: hidden;

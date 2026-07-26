@@ -3,6 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
+import dynamic from 'next/dynamic';
+import TourTooltip from '@/components/TourTooltip';
+
+const Joyride = dynamic(() => import('react-joyride').then(mod => mod.default || mod.Joyride), { ssr: false });
 
 const TICK_INTERVAL = 3000;
 
@@ -40,6 +44,27 @@ export default function DisplayPage() {
   const [displayMode, setDisplayMode] = useState('leaderboard'); // leaderboard | top3 | stats
   const timerRef = useRef(null);
   const modeRef = useRef(null);
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_display')) {
+      localStorage.setItem('tour_display', 'true');
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if (['finished', 'skipped'].includes(status)) {
+      localStorage.setItem('tour_display', 'true');
+      setRunTour(false);
+    }
+  };
+
+  const displayTourSteps = [
+    { target: '.tour-display-timer', content: 'This tracks the live countdown for the active round.', title: 'Live Timer', skipBeacon: true },
+    { target: '.tour-display-modes', content: 'Switch between Leaderboard, Top 3 Podium, and Stats views manually, or let it auto-rotate.', title: 'Display Modes', skipBeacon: true }
+  ];
 
   useEffect(() => {
     // Initial fallback fetch
@@ -118,6 +143,16 @@ export default function DisplayPage() {
 
   return (
     <div className="min-h-screen cyber-grid flex flex-col bg-dark-900 overflow-hidden" style={{ fontFamily: 'var(--font-display)' }}>
+      <Joyride 
+        steps={displayTourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showSkipButton={true}
+        tooltipComponent={TourTooltip}
+        scrollOffset={150}
+        styles={{ options: { zIndex: 100000, primaryColor: '#8ab4f8' } }}
+      />
       {/* Top bar */}
       <div className="flex items-center justify-between px-8 py-4 border-b border-white/5">
         {/* Logo */}
@@ -132,8 +167,8 @@ export default function DisplayPage() {
 
         {/* Live timer */}
         {isLive && (
-          <div className="text-center">
-            <div className={`font-display font-black text-5xl ${timeLeft <= 60 ? 'text-red-400 animate-pulse' : 'neon-text-green'}`}>
+          <div className="text-center tour-display-timer">
+            <div className={`font-display font-black text-[5vw] min-text-[48px] ${timeLeft <= 60 ? 'text-red-400 animate-pulse' : 'neon-text-green'}`}>
               {fmtTime(timeLeft)}
             </div>
             <div className="font-mono text-xs text-white/30 tracking-widest">ROUND {currentRound} TIME</div>
@@ -141,7 +176,7 @@ export default function DisplayPage() {
         )}
 
         {/* Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 tour-display-modes">
           <div className="flex border border-white/10 overflow-hidden">
             {['leaderboard', 'top3', 'stats'].map(mode => (
               <button key={mode} onClick={() => setDisplayMode(mode)}
@@ -247,18 +282,24 @@ export default function DisplayPage() {
                     <div className="font-mono text-xs text-white/50 text-center mb-4">{top3[0].players.join(' · ')}</div>
                     <div className="font-display font-black text-6xl text-yellow-400">{top3[0].scores.total}</div>
                     <div className="font-mono text-xs text-yellow-400/60">POINTS</div>
+                  <div className="text-[4vw] min-text-[64px] mb-4 animate-float">🥇</div>
+                  <div className="border-2 border-yellow-400/60 bg-yellow-400/8 shadow-[0_0_60px_rgba(255,215,0,0.3)] w-[16vw] min-w-[250px] h-[16vw] min-h-[250px] flex flex-col items-center justify-end p-8">
+                    <div className="font-display font-black text-[1.5vw] min-text-[24px] text-white text-center mb-1">{top3[0].teamName}</div>
+                    <div className="font-mono text-[0.7vw] min-text-[12px] text-white/50 text-center mb-4">{top3[0].players.join(' · ')}</div>
+                    <div className="font-display font-black text-[4vw] min-text-[60px] text-yellow-400">{top3[0].scores.total}</div>
+                    <div className="font-mono text-[0.7vw] min-text-[12px] text-yellow-400/60">POINTS</div>
                   </div>
                 </div>
               )}
               {/* 3rd */}
               {top3[2] && (
                 <div className="flex flex-col items-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
-                  <div className="text-5xl mb-4">🥉</div>
-                  <div className="border border-orange-700/30 bg-orange-800/5 w-52 h-36 flex flex-col items-center justify-end p-6">
-                    <div className="font-display font-bold text-xl text-white text-center mb-1">{top3[2].teamName}</div>
-                    <div className="font-mono text-xs text-white/40 text-center mb-3">{top3[2].players.join(' · ')}</div>
-                    <div className="font-display font-black text-4xl text-orange-400">{top3[2].scores.total}</div>
-                    <div className="font-mono text-xs text-white/30">POINTS</div>
+                  <div className="text-[3vw] min-text-[48px] mb-4">🥉</div>
+                  <div className="border border-orange-700/30 bg-orange-800/5 w-[13vw] min-w-[200px] h-[9vw] min-h-[144px] flex flex-col items-center justify-end p-6">
+                    <div className="font-display font-bold text-[1.2vw] min-text-[20px] text-white text-center mb-1">{top3[2].teamName}</div>
+                    <div className="font-mono text-[0.7vw] min-text-[12px] text-white/40 text-center mb-3">{top3[2].players.join(' · ')}</div>
+                    <div className="font-display font-black text-[2.5vw] min-text-[36px] text-orange-400">{top3[2].scores.total}</div>
+                    <div className="font-mono text-[0.7vw] min-text-[12px] text-white/30">POINTS</div>
                   </div>
                 </div>
               )}
