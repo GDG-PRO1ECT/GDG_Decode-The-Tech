@@ -276,12 +276,6 @@ export default function DisplayPage() {
               {/* 1st */}
               {top3[0] && (
                 <div className="flex flex-col items-center animate-bounce-in">
-                  <div className="text-7xl mb-4 animate-float">🥇</div>
-                  <div className="border-2 border-yellow-400/60 bg-yellow-400/8 shadow-[0_0_60px_rgba(255,215,0,0.3)] w-64 h-64 flex flex-col items-center justify-end p-8">
-                    <div className="font-display font-black text-2xl text-white text-center mb-1">{top3[0].teamName}</div>
-                    <div className="font-mono text-xs text-white/50 text-center mb-4">{top3[0].players.join(' · ')}</div>
-                    <div className="font-display font-black text-6xl text-yellow-400">{top3[0].scores.total}</div>
-                    <div className="font-mono text-xs text-yellow-400/60">POINTS</div>
                   <div className="text-[4vw] min-text-[64px] mb-4 animate-float">🥇</div>
                   <div className="border-2 border-yellow-400/60 bg-yellow-400/8 shadow-[0_0_60px_rgba(255,215,0,0.3)] w-[16vw] min-w-[250px] h-[16vw] min-h-[250px] flex flex-col items-center justify-end p-8">
                     <div className="font-display font-black text-[1.5vw] min-text-[24px] text-white text-center mb-1">{top3[0].teamName}</div>
