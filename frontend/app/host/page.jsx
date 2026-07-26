@@ -253,7 +253,7 @@ export default function HostSetupWizard() {
                         <label className={labelCls}>
                           Tournament Name <span style={{ color: meta.accent }}>*</span>
                         </label>
-                        <input
+                        <input title="Enter the name of the tournament"
                           type="text" value={formData.quizName} autoFocus
                           onChange={e => { set('quizName', e.target.value); setError(''); }}
                           placeholder="e.g. Decode The Tech 2026: Championship"
@@ -262,7 +262,7 @@ export default function HostSetupWizard() {
                       </div>
                       <div>
                         <label className={labelCls}>Description <OptTag /></label>
-                        <textarea rows={3} value={formData.description}
+                        <textarea title="Enter a description for the tournament" rows={3} value={formData.description}
                           onChange={e => set('description', e.target.value)}
                           placeholder="A brief overview of the event — theme, scope, audience."
                           className={inputCls} style={{ resize: 'none' }}
@@ -272,7 +272,7 @@ export default function HostSetupWizard() {
                         <label className={labelCls}>Organization / Institution <OptTag /></label>
                         <div className="relative">
                           <Globe size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30" />
-                          <input type="text" value={formData.organizerName}
+                          <input title="Enter the name of the organizer" type="text" value={formData.organizerName}
                             onChange={e => set('organizerName', e.target.value)}
                             placeholder="e.g. Google Developer Groups"
                             className={inputCls} style={{ paddingLeft: 54 }}
@@ -293,7 +293,7 @@ export default function HostSetupWizard() {
                       <ParamCard label="Players Per Team" icon={<Users size={18} className="text-[#4285F4]" />}>
                         <div className="flex gap-3">
                           {[1,2,3,4,5].map(n => (
-                            <button key={n} type="button" onClick={() => set('playersPerTeam', n)}
+                            <button title="Set players per team to this number" key={n} type="button" onClick={() => set('playersPerTeam', n)}
                               className={`flex-1 py-3.5 rounded-xl font-mono text-[16px] font-bold transition-all shadow-sm ${
                                 formData.playersPerTeam === n 
                                   ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.4)] scale-[1.02]' 
@@ -304,7 +304,7 @@ export default function HostSetupWizard() {
                       </ParamCard>
 
                       <ParamCard label="Max Registered Teams" icon={<Trophy size={18} className="text-[#EA4335]" />}>
-                        <input type="number" min={1} max={500} value={formData.maxTeams}
+                        <input title="Set the maximum number of teams" type="number" min={1} max={500} value={formData.maxTeams}
                           onChange={e => set('maxTeams', parseInt(e.target.value) || 50)}
                           className={inputCls} style={{ fontFamily: 'monospace', fontSize: 20, fontWeight: 800 }}
                         />
@@ -335,7 +335,7 @@ export default function HostSetupWizard() {
                       </ParamCard>
 
                       <ParamCard label="Session Language" icon={<Globe size={18} className="text-[#EA4335]" />}>
-                        <select value={formData.quizLanguage} onChange={e => set('quizLanguage', e.target.value)}
+                        <select title="Select the language for the tournament" value={formData.quizLanguage} onChange={e => set('quizLanguage', e.target.value)}
                           className={inputCls} style={{ background: '#111' }}>
                           <option value="en">English (EN)</option>
                           <option value="es">Español (ES)</option>
@@ -354,7 +354,7 @@ export default function HostSetupWizard() {
                   <motion.div key="s3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, ease }}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
                       <StepHeader n="03" title="Rounds Designer" desc={`Configure up to 5 competitive rounds. ${formData.rounds.length}/5 active.`} accent={meta.accent} noMargin />
-                      <button type="button" onClick={addRound}
+                      <button title="Add a new round to the tournament" type="button" onClick={addRound}
                         className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-bold tracking-wide bg-white/10 border border-white/20 text-white hover:bg-white text-hover-black hover:text-black transition-all shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]">
                         <Plus size={16} />Add Round
                       </button>
@@ -373,7 +373,7 @@ export default function HostSetupWizard() {
                                 ROUND {String(round.roundNumber).padStart(2,'0')}
                               </span>
                             </div>
-                            <button type="button" onClick={() => removeRound(idx)}
+                            <button title="Remove this round" type="button" onClick={() => removeRound(idx)}
                               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all">
                               <Trash2 size={16} />Remove
                             </button>
@@ -383,14 +383,14 @@ export default function HostSetupWizard() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
                               <label className={labelCls}>Round Title</label>
-                              <input type="text" value={round.roundName}
+                              <input title="Enter the name of this round" type="text" value={round.roundName}
                                 onChange={e => updateRound(idx, 'roundName', e.target.value)}
                                 className={inputCls}
                               />
                             </div>
                             <div>
                               <label className={labelCls}>Question Type</label>
-                              <select value={round.questionType} onChange={e => updateRound(idx, 'questionType', e.target.value)}
+                              <select title="Select the type of questions for this round" value={round.questionType} onChange={e => updateRound(idx, 'questionType', e.target.value)}
                                 className={inputCls} style={{ background: '#111' }}>
                                 <option value="mcq">MCQ — Standard</option>
                                 <option value="match">Match Pairs</option>
@@ -402,14 +402,14 @@ export default function HostSetupWizard() {
                             <div className="flex flex-col sm:flex-row gap-5">
                               <div className="flex-1">
                                 <label className={labelCls}>Questions</label>
-                                <input type="number" min={5} max={30} value={round.questionCount}
+                                <input title="Set the number of questions for this round" type="number" min={5} max={30} value={round.questionCount}
                                   onChange={e => updateRound(idx, 'questionCount', parseInt(e.target.value) || 5)}
                                   className={inputCls} style={{ fontFamily: 'monospace', fontWeight: 800 }}
                                 />
                               </div>
                               <div className="flex-1">
                                 <label className={labelCls}>Time Limit</label>
-                                <select value={round.timeLimitSeconds / 60} onChange={e => updateRound(idx, 'timeLimitSeconds', parseInt(e.target.value) * 60)}
+                                <select title="Set the time limit for this round" value={round.timeLimitSeconds / 60} onChange={e => updateRound(idx, 'timeLimitSeconds', parseInt(e.target.value) * 60)}
                                   className={inputCls} style={{ background: '#111' }}>
                                   {[5,10,15,20,25,30].map(m => <option key={m} value={m}>{m} min</option>)}
                                 </select>
@@ -437,7 +437,7 @@ export default function HostSetupWizard() {
                       </div>
                       <div>
                         <label className={labelCls}>Organizer Password <span style={{ color: meta.accent }}>*</span> <OptTag text="MIN 6 CHARS" /></label>
-                        <input type="password" value={formData.organizerPassword}
+                        <input title="Create a password for the organizer" type="password" value={formData.organizerPassword}
                           onChange={e => { set('organizerPassword', e.target.value); setError(''); }}
                           placeholder="••••••••••••"
                           className={inputCls} style={{ fontFamily: 'monospace', letterSpacing: '0.25em', fontSize: '20px' }}
@@ -446,7 +446,7 @@ export default function HostSetupWizard() {
                       </div>
                       <div>
                         <label className={labelCls}>Confirm Password <span style={{ color: meta.accent }}>*</span></label>
-                        <input type="password" value={formData.confirmPassword}
+                        <input title="Confirm the organizer password" type="password" value={formData.confirmPassword}
                           onChange={e => { set('confirmPassword', e.target.value); setError(''); }}
                           placeholder="••••••••••••"
                           className={inputCls} style={{ fontFamily: 'monospace', letterSpacing: '0.25em', fontSize: '20px' }}
@@ -525,7 +525,7 @@ export default function HostSetupWizard() {
                       <div className="font-mono text-4xl md:text-6xl font-black tracking-[0.25em] text-white mb-8 drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] break-all">
                         {createdCode}
                       </div>
-                      <button onClick={copyCode} className={`flex items-center gap-3 mx-auto px-6 py-3 rounded-xl font-bold text-[15px] transition-all ${
+                      <button title="Copy the access code to clipboard" onClick={copyCode} className={`flex items-center gap-3 mx-auto px-6 py-3 rounded-xl font-bold text-[15px] transition-all ${
                         copied ? 'bg-[#34A853]/20 border border-[#34A853]/50 text-[#34A853] shadow-[0_0_20px_rgba(52,168,83,0.3)]' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]'
                       }`}>
                         {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
@@ -533,7 +533,7 @@ export default function HostSetupWizard() {
                       </button>
                     </div>
 
-                    <button onClick={() => router.push(`/host/${createdCode}/questions`)} className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-[16px] bg-white text-black hover:scale-105 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.2)]">
+                    <button title="Proceed to load questions" onClick={() => router.push(`/host/${createdCode}/questions`)} className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-bold text-[16px] bg-white text-black hover:scale-105 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.2)]">
                       <span>Load Question Payload</span>
                       <ArrowRight size={20} />
                     </button>
@@ -544,7 +544,7 @@ export default function HostSetupWizard() {
               {/* ── NAV BUTTONS ── */}
               {step < 6 && (
                 <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-14 pt-10 border-t border-white/10 gap-4 sm:gap-0">
-                  <button type="button" onClick={() => { setError(''); setStep(s => s - 1); }}
+                  <button title="Go back to the previous step" type="button" onClick={() => { setError(''); setStep(s => s - 1); }}
                     disabled={step === 1}
                     className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[15px] font-bold transition-all ${
                       step === 1 ? 'opacity-0 pointer-events-none hidden sm:flex' : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
@@ -553,11 +553,11 @@ export default function HostSetupWizard() {
                   </button>
 
                   {step < 5 ? (
-                    <button type="button" onClick={nextStep} className="flex items-center justify-center gap-3 px-10 py-4 rounded-xl text-[15px] font-bold bg-white text-black hover:scale-105 transition-all shadow-[0_15px_30px_rgba(255,255,255,0.15)]">
+                    <button title="Proceed to the next step" type="button" onClick={nextStep} className="flex items-center justify-center gap-3 px-10 py-4 rounded-xl text-[15px] font-bold bg-white text-black hover:scale-105 transition-all shadow-[0_15px_30px_rgba(255,255,255,0.15)]">
                       <span>Continue</span><ChevronRight size={18} />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleCreateQuiz} disabled={loading} className="flex items-center justify-center gap-3 px-10 py-4 rounded-xl text-[15px] font-bold bg-[#4285F4] text-white hover:bg-[#3b78e7] transition-all shadow-[0_15px_40px_rgba(66,133,244,0.4)] disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                    <button title="Create the tournament" type="button" onClick={handleCreateQuiz} disabled={loading} className="flex items-center justify-center gap-3 px-10 py-4 rounded-xl text-[15px] font-bold bg-[#4285F4] text-white hover:bg-[#3b78e7] transition-all shadow-[0_15px_40px_rgba(66,133,244,0.4)] disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed">
                       {loading ? <><RefreshCw size={18} className="animate-spin" />Creating...</> : <><Sparkles size={18} />Create Tournament</>}
                     </button>
                   )}
@@ -623,7 +623,7 @@ function TogglePair({ opts, value, onChange, activeColor }) {
   return (
     <div className="flex gap-3">
       {opts.map(o => (
-        <button key={String(o.v)} type="button" onClick={() => onChange(o.v)} className="flex-1 py-3.5 rounded-xl text-[14px] font-bold transition-all shadow-sm"
+        <button title="Toggle this setting" key={String(o.v)} type="button" onClick={() => onChange(o.v)} className="flex-1 py-3.5 rounded-xl text-[14px] font-bold transition-all shadow-sm"
           style={{
             backgroundColor: value === o.v ? `${activeColor}20` : 'rgba(255,255,255,0.03)',
             borderColor: value === o.v ? activeColor : 'rgba(255,255,255,0.1)',

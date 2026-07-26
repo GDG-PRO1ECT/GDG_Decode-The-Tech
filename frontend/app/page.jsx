@@ -177,7 +177,7 @@ export default function Page() {
           
           <div className="flex-1"></div>
 
-          <a href="#works" className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-medium bg-[#4285F4] text-white hover:scale-105 hover:bg-[#3b78e7] shadow-[0_0_15px_rgba(66,133,244,0.4)] transition-all duration-300">
+          <a title="Jump to the join event section" href="#works" className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-medium bg-[#4285F4] text-white hover:scale-105 hover:bg-[#3b78e7] shadow-[0_0_15px_rgba(66,133,244,0.4)] transition-all duration-300">
               Join Event
           </a>
         </div>
@@ -256,7 +256,7 @@ export default function Page() {
                 </div>
 
                 <div className="reveal flex flex-col items-center gap-6" style={{ transitionDelay: '300ms' }}>
-                    <a href="#works" className="relative group cursor-pointer inline-block">
+                    <a title="Jump to the enter access code section" href="#works" className="relative group cursor-pointer inline-block">
                        <div className="absolute -inset-1 bg-gradient-to-r from-[#4285F4] via-[#EA4335] to-[#34A853] rounded-full blur opacity-40 group-hover:opacity-75 transition duration-1000 group-hover:duration-300 animate-pan-bg" style={{ backgroundSize: '200% auto' }}></div>
                        <div className="relative glass-card px-10 py-4 rounded-full flex items-center gap-3 text-sm md:text-base text-white uppercase tracking-[0.2em] font-bold group-hover:bg-white/10 transition-all duration-300 border border-white/10">
                          <span>Enter Access Code</span>
@@ -372,7 +372,7 @@ export default function Page() {
                                   Your event coordinator will provide a 6-character access code to authenticate your node.
                               </p>
                               <div className="relative group/input">
-                                <input 
+                                <input title="Enter your 6-character access code here" 
                                   type="text" 
                                   placeholder="ENTER CODE" 
                                   maxLength={6} 
@@ -387,7 +387,7 @@ export default function Page() {
                                   </div>
                                 )}
                               </div>
-                              <button 
+                              <button title="Enter the arena with this access code"
                                 type="submit" 
                                 disabled={loading || code.length !== 6}
                                 className="w-full mt-2 relative group/btn disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -432,7 +432,7 @@ export default function Page() {
 
                             <Link href="/host" className="inline-flex w-full relative group/btn">
                               <div className="absolute -inset-0.5 bg-gradient-to-r from-[#EA4335] to-[#FBBC05] rounded-xl blur opacity-30 group-hover/btn:opacity-60 transition duration-500 animate-pan-bg"></div>
-                              <button className="w-full relative bg-[#0a0a0a] border border-white/10 text-white font-bold tracking-[0.1em] uppercase text-sm py-4 rounded-xl flex items-center justify-center gap-3 transition-all group-hover/btn:border-white/20">
+                              <button title="Start the tournament creation process" className="w-full relative bg-[#0a0a0a] border border-white/10 text-white font-bold tracking-[0.1em] uppercase text-sm py-4 rounded-xl flex items-center justify-center gap-3 transition-all group-hover/btn:border-white/20">
                                 INITIALIZE SERVER <ArrowRight size={18} className="text-[#EA4335] group-hover/btn:translate-x-1 transition-transform -rotate-45" />
                               </button>
                             </Link>

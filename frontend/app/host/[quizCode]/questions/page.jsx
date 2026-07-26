@@ -325,9 +325,9 @@ export default function HostQuestionsPanel() {
             <label className="inline-flex items-center gap-2 font-mono text-xs tracking-wider bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 px-4 py-2.5 rounded-xl transition-all uppercase cursor-pointer">
               <Upload size={14} className="text-purple-400" />
               <span>{importing ? 'IMPORTING...' : 'IMPORT DOCS/CSV'}</span>
-              <input type="file" accept=".docx,.csv,.json" onChange={handleImport} className="hidden" disabled={importing} />
+              <input title="Choose file to import" type="file" accept=".docx,.csv,.json" onChange={handleImport} className="hidden" disabled={importing} />
             </label>
-            <button 
+            <button title="Create a new question"
               onClick={() => setShowForm(!showForm)} 
               className="inline-flex items-center gap-2 font-mono font-bold text-xs tracking-wider bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl transition-all uppercase shadow-[0_0_20px_rgba(59,130,246,0.3)]"
             >
@@ -403,7 +403,7 @@ export default function HostQuestionsPanel() {
                 : 'Insert required question payloads for each round to unlock arena compilation.'}
             </p>
             {session?.status === 'draft' ? (
-              <button
+              <button title="Start the game using these questions"
                 type="button"
                 disabled={!isAllValid}
                 onClick={launchQuiz}
@@ -427,7 +427,7 @@ export default function HostQuestionsPanel() {
 
         {/* Filters */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-          <button 
+          <button title="Show questions from all rounds"
             onClick={() => setFilterRound(0)}
             className={`px-5 py-2.5 font-mono text-xs tracking-wider uppercase border rounded-xl transition-all flex items-center gap-2 flex-shrink-0 ${
               filterRound === 0 
@@ -439,7 +439,7 @@ export default function HostQuestionsPanel() {
             <span>ALL ROUNDS ({questions.length})</span>
           </button>
           {session?.settings?.rounds?.map((r, idx) => (
-            <button 
+            <button title="Filter questions by this round"
               key={idx}
               onClick={() => setFilterRound(r.roundNumber)}
               className={`px-5 py-2.5 font-mono text-xs tracking-wider uppercase border rounded-xl transition-all flex-shrink-0 ${
@@ -461,7 +461,7 @@ export default function HostQuestionsPanel() {
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6]" /> 
                 {editing ? 'EDIT QUESTION PAYLOAD' : 'INSERT NEW QUESTION PAYLOAD'}
               </div>
-              <button 
+              <button title="Cancel editing and close form"
                 onClick={resetForm} 
                 className="font-mono text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10 uppercase transition-all flex items-center gap-1.5"
               >
@@ -473,7 +473,7 @@ export default function HostQuestionsPanel() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="font-mono text-xs text-blue-400 tracking-wider block mb-2 uppercase font-semibold">ROUND *</label>
-                  <select 
+                  <select title="Select the round for this question"
                     value={form.round} 
                     onChange={e => {
                       const r = parseInt(e.target.value);
@@ -494,7 +494,7 @@ export default function HostQuestionsPanel() {
                 </div>
                 <div>
                   <label className="font-mono text-xs text-purple-400 tracking-wider block mb-2 uppercase font-semibold">QUESTION TYPE *</label>
-                  <select 
+                  <select title="Select the type of question"
                     value={form.type} 
                     onChange={e => setForm({ ...form, type: e.target.value })}
                     disabled={getRoundConfig(form.round)?.questionType !== 'mix'}
@@ -508,7 +508,7 @@ export default function HostQuestionsPanel() {
                 </div>
                 <div>
                   <label className="font-mono text-xs text-emerald-400 tracking-wider block mb-2 uppercase font-semibold">POINTS *</label>
-                  <input 
+                  <input title="Set base points for this question"
                     type="number" 
                     value={form.basePoints} 
                     onChange={e => setForm({ ...form, basePoints: e.target.value })}
@@ -519,7 +519,7 @@ export default function HostQuestionsPanel() {
 
               <div>
                 <label className="font-mono text-xs text-white/80 tracking-wider block mb-2 uppercase font-semibold">QUESTION / STATEMENT *</label>
-                <textarea 
+                <textarea title="Enter the text for this question"
                   required 
                   value={form.question} 
                   onChange={e => setForm({ ...form, question: e.target.value })} 
@@ -532,7 +532,7 @@ export default function HostQuestionsPanel() {
               {form.type === 'emoji' && (
                 <div>
                   <label className="font-mono text-xs text-yellow-400 tracking-wider block mb-2 uppercase font-semibold">EMOJI CLUE 🎯</label>
-                  <input 
+                  <input title="Enter emoji clues if applicable"
                     value={form.emojiClue} 
                     onChange={e => setForm({ ...form, emojiClue: e.target.value })}
                     placeholder="e.g. 🦀 🛡️ ⚙️" 
@@ -550,7 +550,7 @@ export default function HostQuestionsPanel() {
                         <span className="font-mono text-xs font-bold text-white/60 w-12 flex items-center justify-center bg-white/5 border-r border-white/10">
                           {['A','B','C','D'][i]}
                         </span>
-                        <input 
+                        <input title="Enter an option for the answer"
                           value={opt} 
                           onChange={e => updateOption(i, e.target.value)}
                           placeholder={`Option ${['A','B','C','D'][i]}`}
@@ -566,20 +566,20 @@ export default function HostQuestionsPanel() {
                   <div className="space-y-3">
                     {form.matchPairs.map((pair, i) => (
                       <div key={i} className="flex flex-col md:flex-row items-center gap-3">
-                        <input 
+                        <input title="Enter the left part of the match"
                           value={pair.left} 
                           onChange={e => updateMatchPair(i, 'left', e.target.value)}
                           placeholder="Left Item" 
                           className="flex-1 w-full bg-black/40 border border-white/10 rounded-xl text-white font-sans text-xs px-4 py-3 focus:outline-none focus:border-blue-500 transition-all" 
                         />
                         <span className="text-blue-400 font-bold">&harr;</span>
-                        <input 
+                        <input title="Enter the right part of the match"
                           value={pair.right} 
                           onChange={e => updateMatchPair(i, 'right', e.target.value)}
                           placeholder="Right Item" 
                           className="flex-1 w-full bg-black/40 border border-white/10 rounded-xl text-white font-sans text-xs px-4 py-3 focus:outline-none focus:border-blue-500 transition-all" 
                         />
-                        <button 
+                        <button title="Remove this match pair"
                           type="button" 
                           onClick={() => removeMatchPair(i)} 
                           className="text-white/40 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-all"
@@ -588,7 +588,7 @@ export default function HostQuestionsPanel() {
                         </button>
                       </div>
                     ))}
-                    <button 
+                    <button title="Add another match pair"
                       type="button" 
                       onClick={addMatchPair} 
                       className="w-full py-3 border border-dashed border-white/20 hover:border-white/40 text-white/60 hover:text-white rounded-xl font-mono text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
@@ -601,7 +601,7 @@ export default function HostQuestionsPanel() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.02] p-6 border border-white/5 rounded-2xl">
                   <div>
                     <label className="font-mono text-xs text-emerald-400 tracking-wider block mb-2 uppercase font-semibold">CORRECT VAL *</label>
-                    <select 
+                    <select title="Select the correct true/false value"
                       value={form.correctAnswer} 
                       onChange={e => setForm({ ...form, correctAnswer: e.target.value })}
                       className="w-full bg-[#0a0a0e] border border-emerald-500/30 text-white font-mono text-xs px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-all"
@@ -612,7 +612,7 @@ export default function HostQuestionsPanel() {
                     </select>
                   </div>
                   <div className="flex items-center gap-3 pt-6">
-                    <input
+                    <input title="Enable reverse logic for this question"
                       type="checkbox"
                       id="hasReverseLogic"
                       checked={form.hasReverseLogic}
@@ -629,7 +629,7 @@ export default function HostQuestionsPanel() {
               {(form.type === 'mcq' || form.type === 'emoji') && (
                 <div className="bg-white/[0.02] p-6 border border-white/5 rounded-2xl">
                   <label className="font-mono text-xs text-emerald-400 tracking-wider block mb-2 uppercase font-semibold">CORRECT ANSWER *</label>
-                  <select 
+                  <select title="Select the correct answer from the options"
                     required 
                     value={form.correctAnswer} 
                     onChange={e => setForm({ ...form, correctAnswer: e.target.value })}
@@ -643,7 +643,7 @@ export default function HostQuestionsPanel() {
 
               <div>
                 <label className="font-mono text-xs text-white/50 tracking-wider block mb-2 uppercase font-semibold">EXPLANATION / TRIVIA LOG</label>
-                <input 
+                <input title="Enter an explanation for the answer"
                   value={form.explanation} 
                   onChange={e => setForm({ ...form, explanation: e.target.value })}
                   placeholder="Details revealed post-submission (optional)..."
@@ -652,7 +652,7 @@ export default function HostQuestionsPanel() {
               </div>
 
               <div className="flex gap-4 pt-4 border-t border-white/10">
-                <button 
+                <button title="Save this question"
                   type="submit" 
                   disabled={saving} 
                   className="bg-blue-500 hover:bg-blue-600 text-white font-mono font-bold tracking-wider text-xs uppercase px-8 py-4 rounded-xl flex-1 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
@@ -660,7 +660,7 @@ export default function HostQuestionsPanel() {
                   <Check size={16} />
                   <span>{saving ? 'UPLOADING...' : editing ? 'SAVE QUESTION PAYLOAD' : 'COMMIT QUESTION PAYLOAD'}</span>
                 </button>
-                <button 
+                <button title="Cancel without saving"
                   type="button" 
                   onClick={resetForm} 
                   className="bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white px-8 py-4 rounded-xl font-mono text-xs uppercase tracking-wider transition-all"
@@ -741,13 +741,13 @@ export default function HostQuestionsPanel() {
                     {q.basePoints} CYC
                   </span>
                   <div className="flex gap-2">
-                    <button 
+                    <button title="Edit this question"
                       onClick={() => startEdit(q)} 
                       className="font-mono text-xs tracking-wider text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 uppercase rounded-xl transition-all flex items-center gap-1.5"
                     >
                       <Edit size={14} /> EDIT
                     </button>
-                    <button 
+                    <button title="Delete this question"
                       onClick={() => deleteQuestion(q._id, q.question)} 
                       className="font-mono text-xs tracking-wider text-red-400 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 px-4 py-2 uppercase rounded-xl transition-all flex items-center gap-1.5"
                     >

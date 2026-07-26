@@ -582,9 +582,9 @@ export default function TeamClient({ initialTeam, initialSession }) {
       <div className="flex-1 w-full flex flex-col items-center relative z-10 pt-20 pb-40">
 
         <div className="flex gap-4 mb-8">
-          <button onClick={() => document.getElementById('briefing-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-mono text-xs tracking-widest text-gray-400 uppercase transition-all">Quick_Link: Briefing</button>
+          <button title="Jump to the briefing section" onClick={() => document.getElementById('briefing-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-mono text-xs tracking-widest text-gray-400 uppercase transition-all">Quick_Link: Briefing</button>
           {visibleRounds.length > 0 && analysisRound > 0 && analysisQuestions.length > 0 && (
-            <button onClick={() => document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-1.5 bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 rounded-full font-mono text-xs tracking-widest text-red-500 uppercase transition-all">Quick_Link: Analysis</button>
+            <button title="Jump to the analysis section" onClick={() => document.getElementById('analysis-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-1.5 bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 rounded-full font-mono text-xs tracking-widest text-red-500 uppercase transition-all">Quick_Link: Analysis</button>
           )}
         </div>
 
@@ -713,7 +713,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
                 {/* Action Interface */}
                 <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }} className="w-full max-w-xs mt-4">
-                  <button
+                  <button title="Acknowledge qualification and continue"
                     onClick={acknowledgeQualification}
                     className={`group relative w-full py-4 font-display font-black tracking-[0.5em] uppercase transition-all overflow-hidden rounded-xl border ${isQualified ? 'bg-gdg-green border-gdg-green text-black' : 'bg-red-600 border-red-600 text-white'
                       }`}
@@ -829,7 +829,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
 
             <div className="flex justify-center gap-4 mb-10">
               {visibleRounds.map(r => (
-                <button
+                <button title="View analysis for this phase"
                   key={r}
                   onClick={() => setAnalysisRound(r)}
                   className={`px-6 py-2 font-mono text-xs tracking-[0.3em] border transition-all ${analysisRound === r
@@ -953,7 +953,7 @@ export default function TeamClient({ initialTeam, initialSession }) {
         animate={{ y: 0, opacity: 1 }}
         className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[500px] px-6 z-50"
       >
-        <button
+        <button title="Enter the arena or view status"
           onClick={() => { if (isActive && !hasFinishedCurrentRound && !isTimeExpired) router.push(`/quiz/${quizCode}/play/${teamId}`); }}
           className={`relative w-full h-20 overflow-hidden transition-all duration-300 ${isActive && !hasFinishedCurrentRound && !isTimeExpired
             ? 'bg-red-600/10 border-t-2 border-b-2 border-red-600 hover:bg-red-600/20 cursor-pointer shadow-[0_0_30px_rgba(255,0,0,0.2)]'

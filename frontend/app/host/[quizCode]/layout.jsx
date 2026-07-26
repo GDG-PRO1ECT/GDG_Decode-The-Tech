@@ -80,7 +80,7 @@ export default function HostQuizLayout({ children }) {
           
           <div className="relative">
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-8 bg-gdg-red"></div>
-            <input 
+            <input title="Enter the master password to gain access"
               type="password" 
               placeholder="ENTER MASTER KEY" 
               value={password} 
@@ -89,7 +89,7 @@ export default function HostQuizLayout({ children }) {
             />
           </div>
 
-          <button 
+          <button title="Authenticate and log in"
             type="submit" 
             disabled={loading || !password}
             className="clip-angled-br mt-4 bg-gdg-red/10 hover:bg-gdg-red border border-gdg-red/50 text-gdg-red hover:text-white py-4 font-display font-black tracking-[0.4em] uppercase transition-all hover:shadow-[0_0_30px_rgba(234,67,53,0.4)] disabled:opacity-50"

@@ -144,14 +144,14 @@ export default function DisplayPage() {
         <div className="flex items-center gap-3">
           <div className="flex border border-white/10 overflow-hidden">
             {['leaderboard', 'top3', 'stats'].map(mode => (
-              <button key={mode} onClick={() => setDisplayMode(mode)}
+              <button title="Change display mode" key={mode} onClick={() => setDisplayMode(mode)}
                 className={`font-mono text-xs px-4 py-2 transition-colors ${displayMode === mode ? 'bg-neon-cyan/20 text-neon-cyan' : 'text-white/30 hover:text-white'}`}>
                 {mode.toUpperCase()}
               </button>
             ))}
           </div>
           {!isFullscreen && (
-            <button onClick={enterFullscreen} className="btn-neon text-xs px-4 py-2">⛶ FULLSCREEN</button>
+            <button title="Enter full screen mode" onClick={enterFullscreen} className="btn-neon text-xs px-4 py-2">⛶ FULLSCREEN</button>
           )}
         </div>
       </div>

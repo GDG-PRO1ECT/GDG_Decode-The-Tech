@@ -6,7 +6,8 @@ export default function TerminalButton({
   onClick, 
   variant = 'green', 
   className = '',
-  type = 'button' 
+  type = 'button',
+  title
 }) {
   const baseClasses = "relative px-6 py-3 font-mono font-bold tracking-widest text-sm uppercase transition-all duration-300 border focus:outline-none flex items-center justify-center gap-2";
   
@@ -19,6 +20,7 @@ export default function TerminalButton({
   return (
     <motion.button
       type={type}
+      title={title}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}

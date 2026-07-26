@@ -157,7 +157,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
           <Link href="/" className="glass-panel px-6 py-2 font-mono text-[10px] text-gray-400 hover:text-white transition-all flex items-center gap-2 uppercase tracking-[0.3em] rounded-full group border border-white/5 hover:border-gdg-red/50">
             <span className="text-gdg-red group-hover:animate-pulse">◄</span> EXIT_SUDO
           </Link>
-          <button 
+          <button title="Log out of the host dashboard"
             onClick={() => { sessionStorage.removeItem(`admin_pass_${quizCode}`); window.location.reload(); }}
             className="glass-panel px-6 py-2 font-mono text-[10px] text-gray-400 hover:text-gdg-red transition-all flex items-center gap-2 uppercase tracking-[0.3em] rounded-full border border-white/5 hover:border-gdg-red/30"
           >
@@ -240,7 +240,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
           </div>
 
           <div className="glass-panel p-6 rounded-[2rem] border border-white/5 relative overflow-hidden transition-all duration-500">
-            <button onClick={() => setShowDanger(!showDanger)} className="w-full flex items-center justify-between text-gray-400 hover:text-white transition-colors group">
+            <button title="Toggle system override options" onClick={() => setShowDanger(!showDanger)} className="w-full flex items-center justify-between text-gray-400 hover:text-white transition-colors group">
               <div className="flex items-center gap-3">
                  <ShieldAlert size={18} className={`${showDanger ? 'text-gdg-red' : ''} transition-colors`} />
                  <span className="font-display font-bold text-sm tracking-[0.2em] uppercase">SYSTEM_OVERRIDE</span>
@@ -252,15 +252,15 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
               {showDanger && (
                 <motion.div initial={{ height: 0, opacity: 0, marginTop: 0 }} animate={{ height: 'auto', opacity: 1, marginTop: 20 }} exit={{ height: 0, opacity: 0, marginTop: 0 }} className="overflow-hidden">
                   <div className="flex flex-col gap-3">
-                    <button onClick={() => controlGame('finish')} disabled={loading} className="w-full bg-dark-900 border border-gdg-yellow/30 hover:bg-gdg-yellow/20 hover:border-gdg-yellow text-gdg-yellow py-4 px-6 rounded-xl font-display font-bold text-[10px] tracking-[0.3em] uppercase transition-all flex items-center justify-between group shadow-[inset_0_0_20px_rgba(251,188,5,0.05)]">
+                    <button title="End the game and show final scores" onClick={() => controlGame('finish')} disabled={loading} className="w-full bg-dark-900 border border-gdg-yellow/30 hover:bg-gdg-yellow/20 hover:border-gdg-yellow text-gdg-yellow py-4 px-6 rounded-xl font-display font-bold text-[10px] tracking-[0.3em] uppercase transition-all flex items-center justify-between group shadow-[inset_0_0_20px_rgba(251,188,5,0.05)]">
                       <span>TERMINATE_SIM</span>
                       <Power size={14} className="group-hover:animate-pulse" />
                     </button>
                     <div className="grid grid-cols-2 gap-3">
-                      <button onClick={seedDatabase} disabled={loading} className="bg-dark-900 border border-white/10 hover:border-white/30 text-gray-400 hover:text-white py-3 px-4 rounded-xl font-mono text-[9px] tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2">
+                      <button title="Load default questions into the database" onClick={seedDatabase} disabled={loading} className="bg-dark-900 border border-white/10 hover:border-white/30 text-gray-400 hover:text-white py-3 px-4 rounded-xl font-mono text-[9px] tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2">
                         <RefreshCw size={12} /> SEED_DB
                       </button>
-                      <button onClick={() => { if (confirm('CRITICAL: PURGE ALL?')) gameAction('reset'); }} disabled={loading} className="bg-dark-900 border border-gdg-red/30 hover:bg-gdg-red/20 text-gdg-red py-3 px-4 rounded-xl font-mono text-[9px] tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 shadow-[inset_0_0_15px_rgba(234,67,53,0.05)]">
+                      <button title="Delete all game data and restart" onClick={() => { if (confirm('CRITICAL: PURGE ALL?')) gameAction('reset'); }} disabled={loading} className="bg-dark-900 border border-gdg-red/30 hover:bg-gdg-red/20 text-gdg-red py-3 px-4 rounded-xl font-mono text-[9px] tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 shadow-[inset_0_0_15px_rgba(234,67,53,0.05)]">
                         <Skull size={12} /> PURGE_ALL
                       </button>
                     </div>
@@ -322,6 +322,7 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
                         <div className="flex items-center justify-center sm:justify-start bg-dark-950 rounded-xl px-3 py-2 border border-white/5 gap-2">
                           <Clock size={12} className="text-gray-500" />
                           <input
+                            title="Set round time in seconds"
                             type="number"
                             min="1"
                             max="7200"
@@ -340,24 +341,24 @@ export default function AdminDashboard({ quizCode, initialSession = null, initia
                        <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
                          {isActive && !session?.isPaused && (
                            <>
-                             <button onClick={() => gameAction('pause_round', r)} disabled={loading}
+                             <button title="Pause the current round timer" onClick={() => gameAction('pause_round', r)} disabled={loading}
                                className="p-3 rounded-xl bg-gdg-yellow/10 hover:bg-gdg-yellow/20 text-gdg-yellow border border-gdg-yellow/30 transition-all group" title="Pause Phase">
                                <Pause size={14} className="group-hover:scale-110 transition-transform" />
                              </button>
-                             <button onClick={() => gameAction('end_round', r)} disabled={loading}
+                             <button title="End this round early" onClick={() => gameAction('end_round', r)} disabled={loading}
                                className={`px-6 py-3 rounded-xl bg-${color}/10 hover:bg-${color}/20 text-${color} border border-${color}/30 font-display font-bold text-[9px] tracking-[0.3em] uppercase transition-all flex items-center gap-2`}>
                                <Square size={10} fill="currentColor" /> HALT
                              </button>
                            </>
                          )}
                          {isActive && session?.isPaused && (
-                           <button onClick={() => gameAction('resume_round', r)} disabled={loading}
+                           <button title="Resume the paused round timer" onClick={() => gameAction('resume_round', r)} disabled={loading}
                              className="px-6 py-3 rounded-xl bg-gdg-green/10 hover:bg-gdg-green/20 text-gdg-green border border-gdg-green/50 font-display font-bold text-[9px] tracking-[0.3em] uppercase transition-all shadow-[0_0_15px_rgba(52,168,83,0.2)] animate-pulse flex items-center gap-2">
                              <Play size={10} fill="currentColor" /> RESUME
                            </button>
                          )}
                          {!isActive && canStart && (
-                           <button onClick={() => gameAction('start_round', r)} disabled={loading}
+                           <button title="Start this round for all teams" onClick={() => gameAction('start_round', r)} disabled={loading}
                              className={`px-8 py-3 rounded-xl bg-white/5 hover:bg-${color}/10 text-white hover:text-${color} border border-white/10 hover:border-${color}/50 font-display font-bold text-[9px] tracking-[0.3em] uppercase transition-all flex items-center gap-2 group`}>
                              <Play size={10} className="group-hover:text-current" /> INITIATE
                            </button>

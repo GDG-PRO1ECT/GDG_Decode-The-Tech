@@ -77,7 +77,7 @@ export default function JoinPage() {
             <label className="block font-mono text-[10px] tracking-widest text-gdg-blue uppercase mb-2">
               6-CHARACTER CODE
             </label>
-            <input
+            <input title="Enter the 6-character access code"
               type="text"
               maxLength={6}
               value={code}
@@ -100,7 +100,7 @@ export default function JoinPage() {
             </motion.div>
           )}
 
-          <button
+          <button title="Join the arena using this code"
             type="submit"
             disabled={loading || code.length !== 6}
             className="w-full py-4 bg-gdg-blue text-black font-mono font-bold tracking-widest text-xs uppercase hover:bg-neon-cyan hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none transition-all duration-300 rounded-lg"

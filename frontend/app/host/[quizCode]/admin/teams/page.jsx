@@ -213,16 +213,16 @@ export default function AdminTeamsPage() {
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-4 glass-panel p-4 rounded-2xl border border-white/5">
-          <button onClick={() => {setShowManual(!showManual); setShowBulk(false);}} className={`px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest transition-all ${showManual ? 'bg-gdg-blue text-white shadow-[0_0_15px_rgba(66,133,244,0.4)]' : 'bg-white/5 hover:bg-white/10 text-gray-300'}`}>
+          <button title="Manually add a single team" onClick={() => {setShowManual(!showManual); setShowBulk(false);}} className={`px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest transition-all ${showManual ? 'bg-gdg-blue text-white shadow-[0_0_15px_rgba(66,133,244,0.4)]' : 'bg-white/5 hover:bg-white/10 text-gray-300'}`}>
             + NEW NODE
           </button>
-          <button onClick={() => {setShowBulk(!showBulk); setShowManual(false);}} className={`px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest transition-all ${showBulk ? 'bg-gdg-blue text-white shadow-[0_0_15px_rgba(66,133,244,0.4)]' : 'bg-white/5 hover:bg-white/10 text-gray-300'}`}>
+          <button title="Import multiple teams from text" onClick={() => {setShowBulk(!showBulk); setShowManual(false);}} className={`px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest transition-all ${showBulk ? 'bg-gdg-blue text-white shadow-[0_0_15px_rgba(66,133,244,0.4)]' : 'bg-white/5 hover:bg-white/10 text-gray-300'}`}>
             📋 BULK IMPORT
           </button>
-          <button onClick={exportLinks} className="px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest text-gdg-yellow border border-gdg-yellow/30 hover:bg-gdg-yellow/10 transition-all flex items-center gap-2">
+          <button title="Download team links as a CSV file" onClick={exportLinks} className="px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest text-gdg-yellow border border-gdg-yellow/30 hover:bg-gdg-yellow/10 transition-all flex items-center gap-2">
             🔗 EXPORT LINKS
           </button>
-          <button onClick={deleteAll} className="ml-auto px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest text-gdg-red border border-gdg-red/30 hover:bg-gdg-red/10 transition-all flex items-center gap-2">
+          <button title="Delete all registered teams" onClick={deleteAll} className="ml-auto px-6 py-3 rounded-xl font-display font-bold text-[10px] tracking-widest text-gdg-red border border-gdg-red/30 hover:bg-gdg-red/10 transition-all flex items-center gap-2">
             <span>🗑</span> PURGE ALL
           </button>
         </div>
@@ -244,7 +244,7 @@ export default function AdminTeamsPage() {
                 rows={6}
                 className="w-full bg-dark-900 border border-white/10 rounded-xl text-white font-mono text-sm px-6 py-4 focus:outline-none focus:border-gdg-blue focus:ring-1 focus:ring-gdg-blue placeholder-gray-600 mb-6 transition-all resize-none shadow-inner"
               />
-              <button onClick={bulkImport} className="btn-premium btn-gdg-blue px-10 py-4 text-sm w-full md:w-auto">
+              <button title="Execute bulk import of teams" onClick={bulkImport} className="btn-premium btn-gdg-blue px-10 py-4 text-sm w-full md:w-auto">
                 EXECUTE IMPORT
               </button>
             </motion.div>
@@ -263,23 +263,23 @@ export default function AdminTeamsPage() {
               <form onSubmit={addTeam} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
                 <div className="lg:col-span-2">
                   <label className="font-mono text-[10px] text-gray-400 tracking-widest block mb-2 uppercase ml-2">Squad Designation *</label>
-                  <input required value={form.teamName} onChange={e => setForm({...form, teamName: e.target.value})} placeholder="e.g. Byte Busters"
+                  <input title="Enter the team's name" required value={form.teamName} onChange={e => setForm({...form, teamName: e.target.value})} placeholder="e.g. Byte Busters"
                     className="w-full bg-dark-950/80 border border-white/10 rounded-2xl text-white font-body text-sm px-5 py-4 focus:outline-none focus:border-gdg-green focus:ring-1 focus:ring-gdg-green transition-all" />
                 </div>
                 <div>
                   <label className="font-mono text-[10px] text-gray-400 tracking-widest block mb-2 uppercase ml-2">Node Index *</label>
-                  <input required type="number" min="1" value={form.teamNumber} onChange={e => setForm({...form, teamNumber: e.target.value})} placeholder="1"
+                  <input title="Enter the team's number" required type="number" min="1" value={form.teamNumber} onChange={e => setForm({...form, teamNumber: e.target.value})} placeholder="1"
                     className="w-full bg-dark-950/80 border border-white/10 rounded-2xl text-white font-body text-sm px-5 py-4 focus:outline-none focus:border-gdg-green focus:ring-1 focus:ring-gdg-green transition-all text-center" />
                 </div>
                 {['p1', 'p2', 'p3'].map((k, i) => (
                   <div key={k}>
                     <label className="font-mono text-[10px] text-gray-500 tracking-widest block mb-2 uppercase ml-2">Operative 0{i + 1} {i === 0 ? '*' : ''}</label>
-                    <input required={i === 0} value={form[k]} onChange={e => setForm({...form, [k]: e.target.value})} placeholder={`Player Name`}
+                    <input title="Enter the player's name" required={i === 0} value={form[k]} onChange={e => setForm({...form, [k]: e.target.value})} placeholder={`Player Name`}
                       className="w-full bg-dark-950/80 border border-white/10 rounded-2xl text-white font-body text-sm px-5 py-4 focus:outline-none focus:border-gdg-blue transition-all" />
                   </div>
                 ))}
                 <div className="lg:col-span-3 pt-8 border-t border-white/5 mt-4">
-                  <button type="submit" disabled={adding} className="btn-premium btn-gdg-green w-full md:w-auto px-10 py-4 text-sm disabled:opacity-50">
+                  <button title="Initialize the new team" type="submit" disabled={adding} className="btn-premium btn-gdg-green w-full md:w-auto px-10 py-4 text-sm disabled:opacity-50">
                     {adding ? 'INITIALIZING...' : 'INITIALIZE NODE'}
                   </button>
                 </div>
@@ -351,19 +351,19 @@ export default function AdminTeamsPage() {
                     <a href={`/quiz/${quizCode}/team/${team.teamId}`} target="_blank" className="btn-premium bg-white/5 border-white/10 px-4 py-3 text-[10px] flex-1 sm:flex-none text-center">
                       VIEW
                     </a>
-                    <button onClick={() => { setEditingScore(team); setScoreForm(team.scores); }} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-blue/50 hover:bg-gdg-blue/10 hover:text-gdg-blue text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
+                    <button title="Edit scores for this team" onClick={() => { setEditingScore(team); setScoreForm(team.scores); }} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-blue/50 hover:bg-gdg-blue/10 hover:text-gdg-blue text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
                       EDIT_SCORE
                     </button>
                     {team.isDisqualified ? (
-                      <button onClick={() => setDisqualification(team.teamId, false)} className="btn-premium btn-gdg-green px-4 py-3 text-[10px] flex-1 sm:flex-none">
+                      <button title="Reinstate this team" onClick={() => setDisqualification(team.teamId, false)} className="btn-premium btn-gdg-green px-4 py-3 text-[10px] flex-1 sm:flex-none">
                         REINSTATE
                       </button>
                     ) : (
-                      <button onClick={() => setDisqualification(team.teamId, true)} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-yellow/50 hover:bg-gdg-yellow/10 hover:text-gdg-yellow text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
+                      <button title="Ban this team from the game" onClick={() => setDisqualification(team.teamId, true)} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-yellow/50 hover:bg-gdg-yellow/10 hover:text-gdg-yellow text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
                         BAN
                       </button>
                     )}
-                    <button onClick={() => deleteTeam(team.teamId, team.teamName)} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-red/50 hover:bg-gdg-red/10 hover:text-gdg-red text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
+                    <button title="Delete this team" onClick={() => deleteTeam(team.teamId, team.teamName)} className="btn-premium bg-white/5 border-white/10 hover:border-gdg-red/50 hover:bg-gdg-red/10 hover:text-gdg-red text-gray-400 px-4 py-3 text-[10px] flex-1 sm:flex-none">
                       DEL
                     </button>
                   </div>
@@ -384,7 +384,7 @@ export default function AdminTeamsPage() {
                     <div className="w-10 h-10 rounded-xl bg-gdg-blue/10 flex items-center justify-center text-gdg-blue border border-gdg-blue/20">⚖️</div>
                     ADJUST SCORES
                   </div>
-                  <button onClick={() => setEditingScore(null)} className="text-gray-500 hover:text-white transition-colors">✕</button>
+                  <button title="Close this window" onClick={() => setEditingScore(null)} className="text-gray-500 hover:text-white transition-colors">✕</button>
                 </div>
                 
                 <div className="mb-8">
@@ -402,7 +402,7 @@ export default function AdminTeamsPage() {
                     ].map((f) => (
                       <div key={f.key}>
                         <label className={`font-mono text-[10px] ${f.color} tracking-widest block mb-2 uppercase ml-2`}>{f.label}</label>
-                        <input type="number" value={scoreForm[f.key]} onChange={e => setScoreForm({...scoreForm, [f.key]: parseInt(e.target.value) || 0})}
+                        <input title="Update score value" type="number" value={scoreForm[f.key]} onChange={e => setScoreForm({...scoreForm, [f.key]: parseInt(e.target.value) || 0})}
                           className="w-full bg-dark-950/80 border border-white/10 rounded-2xl text-white font-mono text-lg px-5 py-4 focus:outline-none focus:border-gdg-blue transition-all text-center" />
                       </div>
                     ))}
@@ -415,10 +415,10 @@ export default function AdminTeamsPage() {
                          {(scoreForm.round1 || 0) + (scoreForm.round2 || 0) + (scoreForm.round3 || 0) + (scoreForm.bonusPoints || 0)}
                        </span>
                     </div>
-                    <button type="submit" disabled={adding} className="btn-premium btn-gdg-blue w-full py-5 text-sm disabled:opacity-50 shadow-[0_10px_30px_rgba(66,133,244,0.3)]">
+                    <button title="Save the updated scores" type="submit" disabled={adding} className="btn-premium btn-gdg-blue w-full py-5 text-sm disabled:opacity-50 shadow-[0_10px_30px_rgba(66,133,244,0.3)]">
                       {adding ? 'UPLOADING...' : 'COMMIT CHANGES'}
                     </button>
-                    <button type="button" onClick={() => setEditingScore(null)} className="w-full py-4 text-gray-500 font-mono text-[10px] tracking-widest hover:text-white transition-colors uppercase">
+                    <button title="Cancel editing scores" type="button" onClick={() => setEditingScore(null)} className="w-full py-4 text-gray-500 font-mono text-[10px] tracking-widest hover:text-white transition-colors uppercase">
                       CANCEL_X
                     </button>
                   </div>
